@@ -668,6 +668,7 @@
 }
 
 
+
 /* =========================================================
    PARTY CODE
    ========================================================= */
@@ -866,6 +867,14 @@
   color: #b3b3b3;
 }
 
+.party-member-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
 .party-member:first-child
 .party-member-avatar {
   color: #a7a7a7;
@@ -998,4 +1007,37 @@
 
 .party-connection svg {
   color: #1ed760;
+}
+
+.party-end-session {
+  margin-top: auto;
+  padding: 24px 12px 16px;
+}
+
+.party-end-session-button {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid #B44444;
+  border-radius: 500px;
+  background: transparent;
+  color: #B44444;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.party-end-session-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #CA4B4B;
+  border-color: #B44444;
+}
+
+.party-end-session-button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
