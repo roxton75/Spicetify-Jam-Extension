@@ -5,6 +5,21 @@ import PartyIcon from "../components/PartyIcon";
 import PartyButton from "../components/PartyButton";
 import React from "react";
 
+// Home-specific styles. Shared/global styles live in ../styles/party.css.
+const HOME_STYLES = `
+/* =========================================================
+   PARTY META
+   ========================================================= */
+
+.party-meta {
+  width: 100%;
+  color: #6a6a6a;
+  text-align: center;
+  margin-bottom: 24px;
+  font-size: 12px;
+}
+`;
+
 interface HomeProps {
   onClose: () => void;
   onCreateParty: () => Promise<void>;
@@ -33,6 +48,8 @@ export default function Home({
 
   return (
     <div className="party-panel-inner">
+      <style>{HOME_STYLES}</style>
+
       <PartyHeader title="Party" onClose={onClose} />
 
       <div className="party-content">

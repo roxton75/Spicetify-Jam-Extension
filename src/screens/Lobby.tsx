@@ -25,6 +25,400 @@ import {
   VinylRecordIcon,
 } from "@phosphor-icons/react";
 
+// Lobby-specific styles. Shared/global styles live in ../styles/party.css.
+const LOBBY_STYLES = `
+/* =========================================================
+   PARTY LOBBY
+   Spotify Library-inspired visual language
+   ========================================================= */
+
+.party-lobby-content {
+  flex: 1;
+
+  overflow-y: auto;
+
+  padding: 18px 14px 24px;
+
+  scrollbar-width: thin;
+  scrollbar-color: #4a4a4a transparent;
+}
+
+.party-lobby-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.party-lobby-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.party-lobby-content::-webkit-scrollbar-thumb {
+  background: #4a4a4a;
+  border-radius: 999px;
+}
+
+/* =========================================================
+   PARTY CODE
+   ========================================================= */
+
+.party-code-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding: 10px 0 20px;
+
+  text-align: center;
+}
+
+.party-code-label {
+  margin-bottom: 7px;
+
+  color: #a7a7a7;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.party-code-value {
+  color: #ffffff;
+
+  font-size: 27px;
+  font-weight: 800;
+
+  line-height: 1;
+
+  letter-spacing: 0.13em;
+
+  padding-left: 0.13em;
+}
+
+.party-copy-button {
+  height: 30px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  margin-top: 11px;
+
+  padding: 0 12px;
+
+  border: 0;
+  border-radius: 500px;
+
+  background: #2a2a2a;
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background-color 120ms ease,
+    transform 120ms ease;
+}
+
+.party-copy-button:hover {
+  background: #333333;
+}
+
+.party-copy-button:active {
+  transform: scale(0.97);
+}
+
+/* =========================================================
+   SECTIONS
+   ========================================================= */
+
+.party-section {
+  padding: 15px 0;
+
+  border-top: 1px solid
+    rgba(255, 255, 255, 0.06);
+}
+
+.party-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 9px;
+}
+
+.party-section-title {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  color: #b3b3b3;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.party-section-title svg {
+  color: #1ed760;
+}
+
+.party-session-timer {
+  flex-shrink: 0;
+  min-width: 52px;
+  height: 28px;
+  padding: 0 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(180, 68, 68, 0.45);
+  border-radius: 999px;
+  background: rgba(180, 68, 68, 0.08);
+  color: #b44444;
+  font-family: "Geist Mono", monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* =========================================================
+   LIVE STATUS
+   ========================================================= */
+
+.party-live-status {
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+
+  color: #a7a7a7;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.party-live-dot {
+  width: 6px;
+  height: 6px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #1ed760;
+}
+
+/* =========================================================
+   MEMBERS
+   ========================================================= */
+
+.party-members {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.party-member {
+  min-height: 50px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 7px 9px;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: transparent;
+
+  transition:
+    background-color 120ms ease;
+}
+
+.party-member:hover {
+  background: #1f1f1f;
+}
+
+/* Avatar */
+
+.party-member-avatar {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #242424;
+
+  color: #b3b3b3;
+}
+
+.party-member-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.party-member:first-child
+.party-member-avatar {
+  color: #a7a7a7;
+}
+
+/* Member information */
+
+.party-member-info {
+  min-width: 0;
+
+  flex: 1;
+}
+
+.party-member-name {
+  overflow: hidden;
+
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  line-height: 1.25;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.party-member-role {
+  display: flex;
+  align-items: center;
+
+  gap: 4px;
+
+  margin-top: 2px;
+
+  color: #a7a7a7;
+
+  font-size: 12px;
+  line-height: 1;
+}
+
+.party-member-role svg {
+  color: #727272;
+}
+
+.party-member-you {
+  color: #727272;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   PLAYBACK
+   ========================================================= */
+
+.party-playback-empty {
+  min-height: 118px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 18px 14px;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: #1a1a1a;
+
+  text-align: center;
+}
+
+.party-playback-icon {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 9px;
+
+  border-radius: 6px;
+
+  background: #242424;
+
+  color: #727272;
+}
+
+.party-playback-title {
+  margin-bottom: 4px;
+
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.party-playback-description {
+  max-width: 215px;
+
+  color: #727272;
+
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.party-end-session {
+  margin-top: auto;
+  padding: 24px 12px 16px;
+}
+
+.party-end-session-button {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid #B44444;
+  border-radius: 500px;
+  background: transparent;
+  color: #B44444;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.party-end-session-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #CA4B4B;
+  border-color: #B44444;
+}
+
+.party-end-session-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+`;
+
 interface LobbyProps {
   partyId: string;
   partyCode: string;
@@ -315,6 +709,8 @@ export default function Lobby({
 
   return (
     <div className="party-panel-inner">
+      <style>{LOBBY_STYLES}</style>
+
       {/* Header */}
 
       <div className="party-header">
