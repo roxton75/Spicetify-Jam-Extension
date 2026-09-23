@@ -7,6 +7,8 @@ import {
   getPartyMembers,
   PartyMember,
   endParty,
+  getPartySession,
+  expirePartySession,
 } from "../lib/party";
 
 import {
@@ -27,13 +29,26 @@ interface LobbyProps {
   partyId: string;
   partyCode: string;
   onBack: () => void;
+  onEndParty: () => void;
 }
 
-export default function Lobby({ onBack, partyId, partyCode }: LobbyProps) {
+export default function Lobby({
+  onBack,
+  onEndParty,
+  partyId,
+  partyCode,
+}: LobbyProps) {
   const [copied, setCopied] = React.useState(false);
   const [members, setMembers] = React.useState<PartyMember[]>([]);
   const [currentUserId, setCurrentUserId] = React.useState<string | null>(null);
   const [ending, setEnding] = React.useState(false);
+  const [soloSince, setSoloSince] = React.useState<string | null>(null);
+  const [remainingSeconds, setRemainingSeconds] = React.useState<number | null>(
+    null,
+  );
+  const timerExpiredRef = React.useRef(false);
+  const expiryRequestRef = React.useRef(false);
+  const expiryRetryTimeoutRef = React.useRef<number | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -56,6 +71,41 @@ export default function Lobby({ onBack, partyId, partyCode }: LobbyProps) {
   }, []);
 
   useEffect(() => {
+    timerExpiredRef.current = false;
+  }, [partyId]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`party-members-${partyId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "party_members",
+          filter: `party_id=eq.${partyId}`,
+        },
+        async (payload) => {
+          console.log("[Party] Member change:", payload);
+
+          try {
+            const updatedMembers = await getPartyMembers(partyId);
+            setMembers(updatedMembers);
+          } catch (error) {
+            console.error("[Party] Failed to refresh members:", error);
+          }
+        },
+      )
+      .subscribe((status) => {
+        console.log("[Party] Member realtime status:", status);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [partyId]);
+
+  useEffect(() => {
     let active = true;
 
     const loadMembers = async () => {
@@ -76,6 +126,110 @@ export default function Lobby({ onBack, partyId, partyCode }: LobbyProps) {
       active = false;
     };
   }, [partyId]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadPartySession = async () => {
+      try {
+        const session = await getPartySession(partyId);
+
+        console.log("[Party] Session:", session);
+
+        if (active) {
+          setSoloSince(session.solo_since_at);
+        }
+      } catch (error) {
+        console.error("[Party] Failed to load party session:", error);
+      }
+    };
+
+    loadPartySession();
+
+    const interval = window.setInterval(loadPartySession, 10_000);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [partyId]);
+
+  async function handleTimerExpired() {
+    if (timerExpiredRef.current || expiryRequestRef.current) {
+      return;
+    }
+
+    expiryRequestRef.current = true;
+
+    try {
+      const ended = await expirePartySession(partyId);
+
+      console.log("[Party] Timer expiry result:", ended);
+
+      if (ended) {
+        timerExpiredRef.current = true;
+        onEndParty();
+        return;
+      }
+
+      // Server says the 3-minute threshold has not
+      // been reached yet. Retry after one second.
+      expiryRequestRef.current = false;
+
+      expiryRetryTimeoutRef.current = window.setTimeout(() => {
+        expiryRetryTimeoutRef.current = null;
+        void handleTimerExpired();
+      }, 1000);
+    } catch (error) {
+      console.error("[Party] Failed to expire party:", error);
+
+      expiryRequestRef.current = false;
+
+      expiryRetryTimeoutRef.current = window.setTimeout(() => {
+        expiryRetryTimeoutRef.current = null;
+        void handleTimerExpired();
+      }, 1000);
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (expiryRetryTimeoutRef.current !== null) {
+        window.clearTimeout(expiryRetryTimeoutRef.current);
+        expiryRetryTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!soloSince || members.length !== 1) {
+      setRemainingSeconds(null);
+      return;
+    }
+
+    const updateTimer = () => {
+      const startedAt = new Date(soloSince).getTime();
+      const now = Date.now();
+
+      const elapsedSeconds = Math.floor((now - startedAt) / 1000);
+
+      const remaining = Math.max(180 - elapsedSeconds, 0);
+
+      setRemainingSeconds(remaining);
+
+      if (remaining <= 0) {
+        void handleTimerExpired();
+      }
+    };
+
+    updateTimer();
+
+    const interval = window.setInterval(updateTimer, 1000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [soloSince, members.length]);
 
   useEffect(() => {
     let active = true;
@@ -103,6 +257,25 @@ export default function Lobby({ onBack, partyId, partyCode }: LobbyProps) {
     };
   }, [partyId]);
 
+  // async function handleEndSession() {
+  //   if (ending) return;
+
+  //   setEnding(true);
+
+  //   try {
+  //     await endParty(partyId);
+
+  //     console.log("[Party] Session ended:", partyId);
+
+  //     onBack();
+  //   } catch (error) {
+  //     console.error("[Party] Failed to end session:", error);
+
+  //     Spicetify.showNotification("Party: Failed to end session");
+
+  //     setEnding(false);
+  //   }
+  // }
   async function handleEndSession() {
     if (ending) return;
 
@@ -113,7 +286,10 @@ export default function Lobby({ onBack, partyId, partyCode }: LobbyProps) {
 
       console.log("[Party] Session ended:", partyId);
 
-      onBack();
+      // Tell app.tsx that the party itself has ended.
+      // This clears activeParty and returns the Party button
+      // to its inactive state.
+      onEndParty();
     } catch (error) {
       console.error("[Party] Failed to end session:", error);
 
@@ -153,6 +329,12 @@ export default function Lobby({ onBack, partyId, partyCode }: LobbyProps) {
             <h2>Party</h2>
           </div>
         </div>
+        {remainingSeconds !== null && (
+          <div className="party-session-timer">
+            {String(Math.floor(remainingSeconds / 60)).padStart(2, "0")}:
+            {String(remainingSeconds % 60).padStart(2, "0")}
+          </div>
+        )}
       </div>
 
       {/* Lobby Content */}
@@ -221,9 +403,10 @@ export default function Lobby({ onBack, partyId, partyCode }: LobbyProps) {
 
                   <div className="party-member-info">
                     <div className="party-member-name">
-                      {isCurrentUser
+                      {/* {isCurrentUser
                         ? "You"
-                        : (member.display_name ?? "Unknown User")}
+                        : (member.display_name ?? "Unknown User")} */}
+                      {member.display_name ?? "Unknown User"}
                     </div>
 
                     {isHost && <div className="party-member-role">Host</div>}
@@ -260,13 +443,7 @@ export default function Lobby({ onBack, partyId, partyCode }: LobbyProps) {
           </div>
         </div>
 
-        {/* Connection */}
-
-        {/* <div className="party-connection">
-          <WifiHigh size={14} weight="regular" />
-
-          <span>Party is active</span>
-        </div> */}
+        {/* End Party Session*/}
       </div>
       <div className="party-end-session">
         <button

@@ -14,6 +14,18 @@ export interface PartyMember {
   spotify_account_id: string | null;
 }
 
+export interface PartySession {
+  id: string;
+  code: string;
+  status: "active" | "ended";
+  solo_since_at: string | null;
+}
+
+export interface ActiveParty {
+  partyId: string;
+  partyCode: string;
+}
+
 export async function createParty(): Promise<Party> {
   const {
     data: { session },
@@ -123,4 +135,51 @@ export async function endParty(partyId: string): Promise<void> {
   });
 
   if (error) throw error;
+}
+
+export async function getPartySession(partyId: string): Promise<PartySession> {
+  const { data, error } = await supabase
+    .from("parties")
+    .select("id, code, status, solo_since_at")
+    .eq("id", partyId)
+    .single();
+
+  if (error) throw error;
+
+  return data as PartySession;
+}
+
+export async function expirePartySession(partyId: string): Promise<boolean> {
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) throw sessionError;
+  if (!session) throw new Error("No authenticated session.");
+
+  const { data, error } = await supabase.rpc("expire_party_session", {
+    p_party_id: partyId,
+  });
+
+  if (error) throw error;
+
+  return data === true;
+}
+
+export async function getActiveParty(): Promise<ActiveParty | null> {
+  const { data, error } = await supabase.rpc("get_my_active_party");
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data || data.length === 0) {
+    return null;
+  }
+
+  return {
+    partyId: data[0].party_id,
+    partyCode: data[0].party_code,
+  };
 }
