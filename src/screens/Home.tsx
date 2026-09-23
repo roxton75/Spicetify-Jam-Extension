@@ -7,7 +7,7 @@ import React from "react";
 
 interface HomeProps {
   onClose: () => void;
-  onCreateParty: () => void;
+  onCreateParty: () => Promise<void>;
   onJoinParty: () => void;
 }
 
@@ -16,6 +16,21 @@ export default function Home({
   onCreateParty,
   onJoinParty,
 }: HomeProps) {
+  const [creatingParty, setCreatingParty] = React.useState(false);
+
+  async function handleCreateParty() {
+    if (creatingParty) return;
+
+    setCreatingParty(true);
+
+    try {
+      await onCreateParty();
+    } catch (error) {
+      console.error("[Party] Create party failed:", error);
+      setCreatingParty(false);
+    }
+  }
+
   return (
     <div className="party-panel-inner">
       <PartyHeader title="Party" onClose={onClose} />
@@ -32,23 +47,25 @@ export default function Home({
         <div className="party-actions">
           <PartyButton
             variant="primary"
-            icon={<Plus size={17} weight="bold" />}
-            onClick={onCreateParty}
+            icon={creatingParty ? null : <Plus size={17} weight="bold" />}
+            onClick={handleCreateParty}
+            disabled={creatingParty}
           >
-            Create Party
+            {creatingParty ? "Creating..." : "Create Party"}
           </PartyButton>
 
           <PartyButton
             variant="secondary"
             icon={<SignIn size={17} weight="regular" />}
             onClick={onJoinParty}
+            disabled={creatingParty}
           >
             Join with Code
           </PartyButton>
         </div>
-
-        <div className="party-meta">Party v0.1</div>
       </div>
+
+      <div className="party-meta">Party v0.1</div>
     </div>
   );
 }

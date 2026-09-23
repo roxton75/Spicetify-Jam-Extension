@@ -4,13 +4,18 @@ import React from "react";
 import "./party.css";
 
 import Home from "./screens/Home";
-import CreateParty from "./screens/CreateParty";
+//import CreateParty from "./screens/CreateParty";
 import JoinParty from "./screens/JoinParty";
 import Lobby from "./screens/Lobby";
 
 import { UsersRound } from "lucide-react";
 
-import { createParty, getPartyMembers, getActiveParty } from "./lib/party";
+import {
+  createParty,
+  getPartyMembers,
+  getActiveParty,
+  joinParty,
+} from "./lib/party";
 
 async function main() {
   // Wait for Spicetify Playbar
@@ -29,7 +34,7 @@ async function main() {
     partyCode: string;
   } | null = null;
 
-  let currentScreen: "home" | "create-party" | "join-party" | "lobby" = "home";
+  let currentScreen: "home" | "join-party" | "lobby" = "home";
 
   let partyButton: HTMLButtonElement | null = null;
   let partyRoot: ReturnType<typeof Spicetify.ReactDOM.createRoot> | null = null;
@@ -127,29 +132,10 @@ async function main() {
       partyRoot.render(
         <Home
           onClose={closeParty}
-          onCreateParty={() => {
-            currentScreen = "create-party";
-            renderPartyScreen(panel);
-          }}
-          onJoinParty={() => {
-            currentScreen = "join-party";
-            renderPartyScreen(panel);
-          }}
-        />,
-      );
-
-      return;
-    }
-
-    if (currentScreen === "create-party") {
-      partyRoot.render(
-        <CreateParty
-          onBack={() => {
-            currentScreen = "home";
-            renderPartyScreen(panel);
-          }}
           onCreateParty={async () => {
             try {
+              console.log("[Party] Creating party...");
+
               const party = await createParty();
 
               console.log("[Party] Created:", party);
@@ -177,6 +163,10 @@ async function main() {
               Spicetify.showNotification("Party: Failed to create party");
             }
           }}
+          onJoinParty={() => {
+            currentScreen = "join-party";
+            renderPartyScreen(panel);
+          }}
         />,
       );
 
@@ -190,20 +180,59 @@ async function main() {
             currentScreen = "home";
             renderPartyScreen(panel);
           }}
-          onJoinParty={(code) => {
-            /*
-             * IMPORTANT:
-             * The real join_party() flow is not implemented here yet.
-             *
-             * This currently only moves the UI to the lobby.
-             * We will replace this with the real Supabase join flow.
-             */
+          // onJoinParty={(code) => {
+          //   /*
+          //    * IMPORTANT:
+          //    * The real join_party() flow is not implemented here yet.
+          //    *
+          //    * This currently only moves the UI to the lobby.
+          //    * We will replace this with the real Supabase join flow.
+          //    */
 
-            partyCode = code;
+          //   partyCode = code;
 
-            currentScreen = "lobby";
+          //   currentScreen = "lobby";
 
-            renderPartyScreen(panel);
+          //   renderPartyScreen(panel);
+          // }}
+          onJoinParty={async (code) => {
+            try {
+              console.log("[Party] Joining party:", code);
+
+              const party = await joinParty(code);
+
+              console.log("[Party] Joined:", party);
+
+              const members = await getPartyMembers(party.party_id);
+
+              console.log("[Party] Members:", members);
+
+              partyId = party.party_id;
+              partyCode = party.party_code;
+              partyUserCount = members.length;
+
+              activeParty = {
+                partyId: party.party_id,
+                partyCode: party.party_code,
+              };
+
+              updatePartyButton();
+
+              currentScreen = "lobby";
+
+              renderPartyScreen(panel);
+            } catch (error) {
+              console.error("[Party] Failed to join party:", error);
+
+              const message =
+                error instanceof Error
+                  ? error.message
+                  : "Unable to join party.";
+
+              Spicetify.showNotification(`Party: ${message}`);
+
+              throw error;
+            }
           }}
         />,
       );

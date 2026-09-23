@@ -1,3 +1,7 @@
+/* =========================================================
+   SPOTIFY PLAYER PARTY BUTTON
+   ========================================================= */
+   
 #spotify-party-button {
   position: relative !important;
   width: 100% !important;
@@ -367,167 +371,15 @@
 /* =========================================================
    PARTY META
    ========================================================= */
-
+   
 .party-meta {
-  margin-top: 24px;
-
-  color: #6a6a6a;
-
-  font-size: 10px;
-}
-
-
-/* =========================================================
-   SPOTIFY PLAYER PARTY BUTTON
-   ========================================================= */
-
-
-
-/* =========================================================
-   CREATE PARTY
-   ========================================================= */
-
-.party-header-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.party-back {
-  width: 32px;
-  height: 32px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  flex-shrink: 0;
-
-  border: 0;
-  border-radius: 50%;
-
-  background: transparent;
-  color: #b3b3b3;
-
-  cursor: pointer;
-
-  transition:
-    background-color 120ms ease,
-    color 120ms ease;
-}
-
-.party-back:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-}
-
-
-/* =========================================================
-   CREATE PARTY CONTENT
-   ========================================================= */
-
-.create-party-content {
-  justify-content: center;
-
-  padding-top: 32px;
-}
-
-
-/* =========================================================
-   CREATE PARTY ICON
-   ========================================================= */
-
-.create-party-icon {
-  width: 64px;
-  height: 64px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  margin-bottom: 20px;
-
-  border-radius: 50%;
-
-  background: #000000;
-  color: #1ed760;
-}
-
-
-/* =========================================================
-   INFO
-   ========================================================= */
-
-.create-party-info {
   width: 100%;
-  max-width: 280px;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 10px;
-
-  margin: 4px 0 24px;
-}
-
-.create-party-info-item {
-  display: flex;
-  align-items: center;
-
-  gap: 10px;
-
-  padding: 11px 12px;
-
-  border: 1px solid
-    rgba(255, 255, 255, 0.08);
-
-  background: rgba(255, 255, 255, 0.03);
-
-  color: #b3b3b3;
-
-  font-size: 11px;
-  line-height: 1.35;
-
-  text-align: left;
-}
-
-.create-party-info-item svg {
-  flex-shrink: 0;
-
-  color: #1ed760;
-}
-
-
-/* =========================================================
-   CREATE PARTY BUTTON
-   ========================================================= */
-
-.create-party-actions {
-  margin-top: 0;
-}
-
-.create-party-actions
-.party-button {
-  min-height: 42px;
-}
-
-
-/* =========================================================
-   FOOTER
-   ========================================================= */
-
-.create-party-footer {
-  max-width: 240px;
-
-  margin: 16px 0 0;
-
   color: #6a6a6a;
-
-  font-size: 10px;
-  line-height: 1.4;
-
   text-align: center;
+  margin-bottom: 24px;
+  font-size: 10px;
 }
+
 
 
 /* =========================================================
@@ -539,6 +391,37 @@
   padding-top: 32px;
 }
 
+.party-back {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 !important;
+  margin: 0 4px 0 0 !important;
+
+  background: transparent !important;
+  border: none !important;
+  border-radius: 6px !important;
+
+  color: #b3b3b3 !important;
+  cursor: pointer !important;
+
+  appearance: none !important;
+  box-shadow: none !important;
+}
+
+.party-back:hover {
+  background: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+.party-back:active {
+  background: #242424 !important;
+}
 
 /* =========================================================
    JOIN PARTY ICON

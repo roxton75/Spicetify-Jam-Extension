@@ -3,11 +3,12 @@ import { ArrowLeft, UserPlus, ArrowRight } from "@phosphor-icons/react";
 
 interface JoinPartyProps {
   onBack: () => void;
-  onJoinParty: (code: string) => void;
+  onJoinParty: (code: string) => Promise<void>;
 }
 
 export default function JoinParty({ onBack, onJoinParty }: JoinPartyProps) {
   const [partyCode, setPartyCode] = useState("");
+  const [joining, setJoining] = useState(false);
 
   function handleCodeChange(event: React.ChangeEvent<HTMLInputElement>) {
     const value = event.target.value
@@ -18,12 +19,26 @@ export default function JoinParty({ onBack, onJoinParty }: JoinPartyProps) {
     setPartyCode(value);
   }
 
-  function handleJoin() {
-    if (partyCode.length !== 6) {
+  // function handleJoin() {
+  //   if (partyCode.length !== 6) {
+  //     return;
+  //   }
+
+  //   onJoinParty(partyCode);
+  // }
+  async function handleJoin() {
+    if (partyCode.length !== 6 || joining) {
       return;
     }
 
-    onJoinParty(partyCode);
+    setJoining(true);
+
+    try {
+      await onJoinParty(partyCode);
+    } catch (error) {
+      console.error("[Party] Join failed:", error);
+      setJoining(false);
+    }
   }
 
   return (
@@ -32,11 +47,10 @@ export default function JoinParty({ onBack, onJoinParty }: JoinPartyProps) {
 
       <div className="party-header">
         <div className="party-header-left">
-          <button className="party-back" aria-label="Back" onClick={onBack}>
-            <ArrowLeft size={18} weight="bold" />
-          </button>
-
           <div>
+            {/* <button className="party-back" aria-label="Back" onClick={onBack}>
+              <ArrowLeft size={18} weight="bold" />
+            </button> */}
             <div className="party-eyebrow">Spotify Party</div>
 
             <h2>Join Party</h2>
@@ -84,7 +98,8 @@ export default function JoinParty({ onBack, onJoinParty }: JoinPartyProps) {
         {/* Join Button */}
 
         <div className="party-actions join-party-actions">
-          <button
+          {
+            /* <button
             className="party-button party-primary"
             disabled={partyCode.length !== 6}
             onClick={handleJoin}
@@ -92,7 +107,17 @@ export default function JoinParty({ onBack, onJoinParty }: JoinPartyProps) {
             <span>Join Party</span>
 
             <ArrowRight size={17} weight="bold" />
-          </button>
+          </button> */
+            <button
+              className="party-button party-primary"
+              disabled={partyCode.length !== 6 || joining}
+              onClick={handleJoin}
+            >
+              <span>{joining ? "Joining..." : "Join Party"}</span>
+
+              {!joining && <ArrowRight size={17} weight="bold" />}
+            </button>
+          }
         </div>
 
         <button className="join-party-back-button" onClick={onBack}>

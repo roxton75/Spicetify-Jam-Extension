@@ -183,3 +183,35 @@ export async function getActiveParty(): Promise<ActiveParty | null> {
     partyCode: data[0].party_code,
   };
 }
+
+export async function joinParty(partyCode: string): Promise<Party> {
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    throw sessionError;
+  }
+
+  if (!session) {
+    throw new Error("No authenticated session.");
+  }
+
+  const { data, error } = await supabase.rpc("join_party", {
+    p_code: partyCode,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data || data.length === 0) {
+    throw new Error("Party join returned no data.");
+  }
+
+  return {
+    party_id: data[0].party_id,
+    party_code: data[0].party_code,
+  };
+}
