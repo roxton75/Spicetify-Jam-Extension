@@ -175,7 +175,7 @@ export async function joinParty(partyCode: string): Promise<Party> {
   await getOrCreateSession();
 
   const { data, error } = await supabase.rpc("join_party", {
-    p_code: partyCode,
+    p_party_code: partyCode,
   });
 
   if (error) {
