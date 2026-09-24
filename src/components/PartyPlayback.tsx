@@ -42,27 +42,24 @@ const PLAYBACK_STYLES = `
 
   .party-playback-ambient {
     position: absolute;
-    inset: -35px;
+    inset: -45px;
 
     z-index: -2;
 
-    background:
-      radial-gradient(
-        circle at 50% 38%,
-        var(--party-playback-color) 0%,
-        transparent 68%
-      );
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
 
-    opacity: 0.62;
+    opacity: 0.55;
 
-    filter: blur(28px);
+    filter: blur(32px);
 
-    transform: scale(1.08);
+    transform: scale(1.12);
 
     transition:
-      background 700ms ease,
-      opacity 500ms ease;
-  }
+        background-image 700ms ease,
+        opacity 500ms ease;
+    }
 
   .party-playback-overlay {
     position: absolute;
@@ -86,8 +83,8 @@ const PLAYBACK_STYLES = `
   .party-playback-artwork-wrap {
     position: relative;
 
-    width: 180px;
-    height: 180px;
+    width: 220px;
+    height: 220px;
 
     margin: 16px auto 12px;
 
@@ -316,48 +313,10 @@ function formatTime(milliseconds: number): string {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-async function extractPlaybackColor(
-  trackUri: string | null,
-): Promise<string | null> {
-  if (!trackUri) {
-    return null;
-  }
-
-  try {
-    if (typeof Spicetify.colorExtractor !== "function") {
-      console.warn("[Party] Spicetify.colorExtractor is unavailable.");
-
-      return null;
-    }
-
-    const colors = (await Spicetify.colorExtractor(
-      trackUri,
-    )) as ExtractedColors;
-
-    /*
-     * PROMINENT gives us the main representative color.
-     * DARK_VIBRANT is a useful fallback for the ambient glow.
-     */
-    return (
-      colors.PROMINENT ??
-      colors.DARK_VIBRANT ??
-      colors.VIBRANT ??
-      colors.DESATURATED ??
-      null
-    );
-  } catch (error) {
-    console.warn("[Party] Failed to extract artwork color:", error);
-
-    return null;
-  }
-}
-
 export default function PartyPlayback({ partyId, isHost }: PartyPlaybackProps) {
   const [playback, setPlayback] = useState<PartyPlaybackState | null>(null);
 
   const [displayPositionMs, setDisplayPositionMs] = useState(0);
-
-  const [ambientColor, setAmbientColor] = useState("#242424");
 
   /*
    * Local timing references.
@@ -418,23 +377,6 @@ export default function PartyPlayback({ partyId, isHost }: PartyPlaybackProps) {
   /*
    * Extract the artwork color whenever the track changes.
    */
-  useEffect(() => {
-    let active = true;
-
-    const updateColor = async () => {
-      const color = await extractPlaybackColor(playback?.track_uri ?? null);
-
-      if (!active) return;
-
-      setAmbientColor(color ?? "#242424");
-    };
-
-    void updateColor();
-
-    return () => {
-      active = false;
-    };
-  }, [playback?.track_uri]);
 
   /*
    * Smooth local progress.
@@ -528,16 +470,18 @@ export default function PartyPlayback({ partyId, isHost }: PartyPlaybackProps) {
   return (
     <div
       className="party-playback"
-      style={
-        {
-          "--party-playback-color": ambientColor,
-        } as React.CSSProperties
-      }
     >
       <style>{PLAYBACK_STYLES}</style>
 
       {/* Ambient artwork color */}
-      <div className="party-playback-ambient" />
+      <div
+        className="party-playback-ambient"
+        style={{
+          backgroundImage: playback.artwork_url
+            ? `url("${playback.artwork_url}")`
+            : undefined,
+        }}
+      />
 
       {/* Dark readability layer */}
       <div className="party-playback-overlay" />
