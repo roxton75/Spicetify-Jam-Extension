@@ -1,4 +1,5 @@
 import React from "react";
+import { syncProfile } from "./lib/profile";
 
 // @ts-expect-error CSS imports are handled at build time.
 import "./party.css";
@@ -399,22 +400,43 @@ async function main() {
     updatePartyButton();
   }
 
+  // createPartyButton();
+
+  // /*
+  //  * Get the existing active party when the extension starts.
+  //  *
+  //  * This is what makes the Party button persistent across
+  //  * sidebar closes and extension UI reloads.
+  //  */
+  // await refreshActiveParty();
+
+  // /*
+  //  * Keep the Party button synchronized with Supabase.
+  //  *
+  //  * Later we can replace this with realtime if necessary,
+  //  * but polling is simple and reliable for now.
+  //  */
+  // activePartyInterval = window.setInterval(() => {
+  //   void refreshActiveParty();
+  // }, 15000);
+
+  // console.log("[Party] Extension loaded");
   createPartyButton();
 
-  /*
-   * Get the existing active party when the extension starts.
-   *
-   * This is what makes the Party button persistent across
-   * sidebar closes and extension UI reloads.
-   */
+  try {
+    const profile = await syncProfile();
+
+    console.log("[Party] Spotify profile synced:", {
+      accountId: profile.spotify_account_id,
+      displayName: profile.display_name,
+      avatarUrl: profile.avatar_url,
+    });
+  } catch (error) {
+    console.error("[Party] Failed to sync Spotify profile:", error);
+  }
+
   await refreshActiveParty();
 
-  /*
-   * Keep the Party button synchronized with Supabase.
-   *
-   * Later we can replace this with realtime if necessary,
-   * but polling is simple and reliable for now.
-   */
   activePartyInterval = window.setInterval(() => {
     void refreshActiveParty();
   }, 15000);
