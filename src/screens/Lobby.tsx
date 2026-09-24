@@ -449,13 +449,6 @@ export default function Lobby({
     let active = true;
 
     const loadCurrentUser = async () => {
-      // const {
-      //   data: { session },
-      // } = await supabase.auth.getSession();
-
-      // if (active) {
-      //   setCurrentUserId(session?.user.id ?? null);
-      // }
       const session = await getOrCreateSession();
 
       if (active) {
@@ -608,26 +601,12 @@ export default function Lobby({
         onEndParty();
         return;
       }
-
-      // Server says the party is not eligible to expire yet.
-      expiryRequestRef.current = false;
     } catch (error) {
       console.error("[Party] Failed to expire party:", error);
-
-      // Do not hammer the RPC every second if authentication/network
-      // is currently unavailable.
+    } finally {
       expiryRequestRef.current = false;
     }
   }
-
-  // useEffect(() => {
-  //   return () => {
-  //     if (expiryRetryTimeoutRef.current !== null) {
-  //       window.clearTimeout(expiryRetryTimeoutRef.current);
-  //       expiryRetryTimeoutRef.current = null;
-  //     }
-  //   };
-  // }, []);
 
   useEffect(() => {
     if (!soloSince || members.length !== 1) {

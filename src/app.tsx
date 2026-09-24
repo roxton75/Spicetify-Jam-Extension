@@ -17,11 +17,19 @@ import {
   joinParty,
 } from "./lib/party";
 
+let extensionStarted = false;
+
 async function main() {
   // Wait for Spicetify Playbar
   while (!Spicetify?.Playbar) {
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
+
+  if (extensionStarted) {
+    console.log("[Party] Extension already initialized");
+    return;
+  }
+  extensionStarted = true;
 
   let partyOpen = false;
 
@@ -409,7 +417,7 @@ async function main() {
    */
   activePartyInterval = window.setInterval(() => {
     void refreshActiveParty();
-  }, 5000);
+  }, 15000);
 
   console.log("[Party] Extension loaded");
 }
