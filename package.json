@@ -1,0 +1,24 @@
+{
+  "name": "jam",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/generate-env.mjs && spicetify-creator",
+    "build-local": "node scripts/generate-env.mjs && spicetify-creator --out=dist --minify",
+    "watch": "node scripts/generate-env.mjs && spicetify-creator --watch"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "dotenv": "^18.0.2",
+    "spicetify-creator": "^1.0.17"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
+    "@supabase/supabase-js": "^2.116.0",
+    "lucide-react": "^1.47.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  }
+}
