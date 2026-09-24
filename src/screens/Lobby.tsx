@@ -1,6 +1,7 @@
 import React from "react";
 import { useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { getOrCreateSession } from "../lib/auth";
 
 import {
   touchParty,
@@ -442,18 +443,23 @@ export default function Lobby({
   );
   const timerExpiredRef = React.useRef(false);
   const expiryRequestRef = React.useRef(false);
-  const expiryRetryTimeoutRef = React.useRef<number | null>(null);
+  // const expiryRetryTimeoutRef = React.useRef<number | null>(null);
 
   useEffect(() => {
     let active = true;
 
     const loadCurrentUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      // const {
+      //   data: { session },
+      // } = await supabase.auth.getSession();
+
+      // if (active) {
+      //   setCurrentUserId(session?.user.id ?? null);
+      // }
+      const session = await getOrCreateSession();
 
       if (active) {
-        setCurrentUserId(session?.user.id ?? null);
+        setCurrentUserId(session.user.id);
       }
     };
 
@@ -548,6 +554,43 @@ export default function Lobby({
     };
   }, [partyId]);
 
+  // async function handleTimerExpired() {
+  //   if (timerExpiredRef.current || expiryRequestRef.current) {
+  //     return;
+  //   }
+
+  //   expiryRequestRef.current = true;
+
+  //   try {
+  //     const ended = await expirePartySession(partyId);
+
+  //     console.log("[Party] Timer expiry result:", ended);
+
+  //     if (ended) {
+  //       timerExpiredRef.current = true;
+  //       onEndParty();
+  //       return;
+  //     }
+
+  //     // Server says the 3-minute threshold has not
+  //     // been reached yet. Retry after one second.
+  //     expiryRequestRef.current = false;
+
+  //     expiryRetryTimeoutRef.current = window.setTimeout(() => {
+  //       expiryRetryTimeoutRef.current = null;
+  //       void handleTimerExpired();
+  //     }, 1000);
+  //   } catch (error) {
+  //     console.error("[Party] Failed to expire party:", error);
+
+  //     expiryRequestRef.current = false;
+
+  //     expiryRetryTimeoutRef.current = window.setTimeout(() => {
+  //       expiryRetryTimeoutRef.current = null;
+  //       void handleTimerExpired();
+  //     }, 1000);
+  //   }
+  // }
   async function handleTimerExpired() {
     if (timerExpiredRef.current || expiryRequestRef.current) {
       return;
@@ -566,34 +609,25 @@ export default function Lobby({
         return;
       }
 
-      // Server says the 3-minute threshold has not
-      // been reached yet. Retry after one second.
+      // Server says the party is not eligible to expire yet.
       expiryRequestRef.current = false;
-
-      expiryRetryTimeoutRef.current = window.setTimeout(() => {
-        expiryRetryTimeoutRef.current = null;
-        void handleTimerExpired();
-      }, 1000);
     } catch (error) {
       console.error("[Party] Failed to expire party:", error);
 
+      // Do not hammer the RPC every second if authentication/network
+      // is currently unavailable.
       expiryRequestRef.current = false;
-
-      expiryRetryTimeoutRef.current = window.setTimeout(() => {
-        expiryRetryTimeoutRef.current = null;
-        void handleTimerExpired();
-      }, 1000);
     }
   }
 
-  useEffect(() => {
-    return () => {
-      if (expiryRetryTimeoutRef.current !== null) {
-        window.clearTimeout(expiryRetryTimeoutRef.current);
-        expiryRetryTimeoutRef.current = null;
-      }
-    };
-  }, []);
+  // useEffect(() => {
+  //   return () => {
+  //     if (expiryRetryTimeoutRef.current !== null) {
+  //       window.clearTimeout(expiryRetryTimeoutRef.current);
+  //       expiryRetryTimeoutRef.current = null;
+  //     }
+  //   };
+  // }, []);
 
   useEffect(() => {
     if (!soloSince || members.length !== 1) {
