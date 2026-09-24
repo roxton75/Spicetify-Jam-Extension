@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { getOrCreateSession } from "../lib/auth";
 import { startHostPlaybackSync } from "../lib/playback";
-
+import PartyPlayback from "../components/PartyPlayback";
 import {
   touchParty,
   getPartyMembers,
@@ -852,7 +852,7 @@ export default function Lobby({
             </div>
           </div>
 
-          <div className="party-playback-empty">
+          {/* <div className="party-playback-empty">
             <div className="party-playback-icon">
               <VinylRecordIcon size={22} weight="fill" />
             </div>
@@ -862,7 +862,8 @@ export default function Lobby({
             <div className="party-playback-description">
               Start playing a song in Spotify to share it with the party.
             </div>
-          </div>
+          </div> */}
+          <PartyPlayback partyId={partyId} isHost={isHost} />
         </div>
       </div>
 
