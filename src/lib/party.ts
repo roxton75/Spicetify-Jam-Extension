@@ -270,13 +270,20 @@ export async function createParty(): Promise<Party> {
 
   const { data, error } = await supabase.rpc("create_party");
 
+  // if (error) {
+  //   console.error("[Party] create_party RPC error:", {
+  //     code: error.code,
+  //     message: error.message,
+  //     details: error.details,
+  //     hint: error.hint,
+  //   });
+
+  //   throw error;
+  // }
   if (error) {
-    console.error("[Party] create_party RPC error:", {
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-    });
+    console.error(
+      `[Party] create_party RPC error | code=${error.code} | message=${error.message} | details=${error.details} | hint=${error.hint}`,
+    );
 
     throw error;
   }
