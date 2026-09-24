@@ -2,6 +2,7 @@ import React from "react";
 import { useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { getOrCreateSession } from "../lib/auth";
+import { startHostPlaybackSync } from "../lib/playback";
 
 import {
   touchParty,
@@ -445,13 +446,24 @@ export default function Lobby({
   );
   const timerExpiredRef = React.useRef(false);
   const expiryRequestRef = React.useRef(false);
-  // const expiryRetryTimeoutRef = React.useRef<number | null>(null);
 
   const currentMember = members.find(
     (member) => member.user_id === currentUserId,
   );
 
   const isHost = currentMember?.role === "host";
+
+  useEffect(() => {
+    if (!isHost) return;
+
+    console.log("[Party] Starting host playback sync.");
+
+    const stopPlaybackSync = startHostPlaybackSync(partyId);
+
+    return () => {
+      stopPlaybackSync();
+    };
+  }, [partyId, isHost]);
 
   useEffect(() => {
     let active = true;
@@ -584,43 +596,6 @@ export default function Lobby({
     };
   }, [partyId]);
 
-  // async function handleTimerExpired() {
-  //   if (timerExpiredRef.current || expiryRequestRef.current) {
-  //     return;
-  //   }
-
-  //   expiryRequestRef.current = true;
-
-  //   try {
-  //     const ended = await expirePartySession(partyId);
-
-  //     console.log("[Party] Timer expiry result:", ended);
-
-  //     if (ended) {
-  //       timerExpiredRef.current = true;
-  //       onEndParty();
-  //       return;
-  //     }
-
-  //     // Server says the 3-minute threshold has not
-  //     // been reached yet. Retry after one second.
-  //     expiryRequestRef.current = false;
-
-  //     expiryRetryTimeoutRef.current = window.setTimeout(() => {
-  //       expiryRetryTimeoutRef.current = null;
-  //       void handleTimerExpired();
-  //     }, 1000);
-  //   } catch (error) {
-  //     console.error("[Party] Failed to expire party:", error);
-
-  //     expiryRequestRef.current = false;
-
-  //     expiryRetryTimeoutRef.current = window.setTimeout(() => {
-  //       expiryRetryTimeoutRef.current = null;
-  //       void handleTimerExpired();
-  //     }, 1000);
-  //   }
-  // }
   async function handleTimerExpired() {
     if (timerExpiredRef.current || expiryRequestRef.current) {
       return;
