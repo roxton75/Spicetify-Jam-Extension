@@ -507,6 +507,35 @@ export default function Lobby({
   }, [partyId]);
 
   useEffect(() => {
+    const channel = supabase
+      .channel(`party-session-${partyId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "parties",
+          filter: `id=eq.${partyId}`,
+        },
+        (payload) => {
+          console.log("[Party] Session change:", payload);
+
+          if (payload.new.status === "ended") {
+            Spicetify.showNotification("Party: Session ended by host");
+            onEndParty();
+          }
+        },
+      )
+      .subscribe((status) => {
+        console.log("[Party] Session realtime status:", status);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [partyId, onEndParty]);
+
+  useEffect(() => {
     let active = true;
 
     const loadMembers = async () => {
@@ -862,16 +891,7 @@ export default function Lobby({
         </div>
       </div>
 
-      {/* End Party Session*/}
-      {/* <div className="party-end-session">
-        <button
-          className="party-end-session-button"
-          onClick={handleEndSession}
-          disabled={ending}
-        >
-          {ending ? "Ending..." : "End Session"}
-        </button>
-      </div> */}
+      {/* End | Leave Party Session*/}
       <div className="party-end-session">
         {isHost ? (
           <button
