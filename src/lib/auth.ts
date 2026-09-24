@@ -28,26 +28,26 @@
 // }
 import { supabase } from "./supabase";
 
-let sessionPromise: ReturnType<typeof createSession> | null = null;
+let sessionPromise: ReturnType<typeof initializeSession> | null = null;
 
-async function createSession() {
+async function initializeSession() {
   const {
     data: { session },
-    error: sessionError,
+    error,
   } = await supabase.auth.getSession();
 
-  if (sessionError) {
-    throw sessionError;
+  if (error) {
+    throw error;
   }
 
   if (session) {
     return session;
   }
 
-  const { data, error } = await supabase.auth.signInAnonymously();
+  const { data, error: signInError } = await supabase.auth.signInAnonymously();
 
-  if (error) {
-    throw error;
+  if (signInError) {
+    throw signInError;
   }
 
   if (!data.session) {
@@ -58,12 +58,15 @@ async function createSession() {
 }
 
 export async function getOrCreateSession() {
-  if (!sessionPromise) {
-    sessionPromise = createSession().catch((error) => {
-      sessionPromise = null;
-      throw error;
-    });
+  if (sessionPromise) {
+    return sessionPromise;
   }
 
-  return sessionPromise;
+  sessionPromise = initializeSession();
+
+  try {
+    return await sessionPromise;
+  } finally {
+    sessionPromise = null;
+  }
 }
