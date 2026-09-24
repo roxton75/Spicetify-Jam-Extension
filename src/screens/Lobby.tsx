@@ -10,6 +10,7 @@ import {
   endParty,
   getPartySession,
   expirePartySession,
+  leaveParty,
 } from "../lib/party";
 
 import {
@@ -437,6 +438,7 @@ export default function Lobby({
   const [members, setMembers] = React.useState<PartyMember[]>([]);
   const [currentUserId, setCurrentUserId] = React.useState<string | null>(null);
   const [ending, setEnding] = React.useState(false);
+  const [leaving, setLeaving] = React.useState(false);
   const [soloSince, setSoloSince] = React.useState<string | null>(null);
   const [remainingSeconds, setRemainingSeconds] = React.useState<number | null>(
     null,
@@ -444,6 +446,12 @@ export default function Lobby({
   const timerExpiredRef = React.useRef(false);
   const expiryRequestRef = React.useRef(false);
   // const expiryRetryTimeoutRef = React.useRef<number | null>(null);
+
+  const currentMember = members.find(
+    (member) => member.user_id === currentUserId,
+  );
+
+  const isHost = currentMember?.role === "host";
 
   useEffect(() => {
     let active = true;
@@ -664,25 +672,6 @@ export default function Lobby({
     };
   }, [partyId]);
 
-  // async function handleEndSession() {
-  //   if (ending) return;
-
-  //   setEnding(true);
-
-  //   try {
-  //     await endParty(partyId);
-
-  //     console.log("[Party] Session ended:", partyId);
-
-  //     onBack();
-  //   } catch (error) {
-  //     console.error("[Party] Failed to end session:", error);
-
-  //     Spicetify.showNotification("Party: Failed to end session");
-
-  //     setEnding(false);
-  //   }
-  // }
   async function handleEndSession() {
     if (ending) return;
 
@@ -703,6 +692,26 @@ export default function Lobby({
       Spicetify.showNotification("Party: Failed to end session");
 
       setEnding(false);
+    }
+  }
+
+  async function handleLeaveParty() {
+    if (leaving) return;
+
+    setLeaving(true);
+
+    try {
+      await leaveParty(partyId);
+
+      console.log("[Party] Left party:", partyId);
+
+      onEndParty();
+    } catch (error) {
+      console.error("[Party] Failed to leave party:", error);
+
+      Spicetify.showNotification("Party: Failed to leave party");
+
+      setLeaving(false);
     }
   }
 
@@ -851,10 +860,10 @@ export default function Lobby({
             </div>
           </div>
         </div>
-
-        {/* End Party Session*/}
       </div>
-      <div className="party-end-session">
+
+      {/* End Party Session*/}
+      {/* <div className="party-end-session">
         <button
           className="party-end-session-button"
           onClick={handleEndSession}
@@ -862,6 +871,25 @@ export default function Lobby({
         >
           {ending ? "Ending..." : "End Session"}
         </button>
+      </div> */}
+      <div className="party-end-session">
+        {isHost ? (
+          <button
+            className="party-end-session-button"
+            onClick={handleEndSession}
+            disabled={ending}
+          >
+            {ending ? "Ending..." : "End Session"}
+          </button>
+        ) : (
+          <button
+            className="party-end-session-button"
+            onClick={handleLeaveParty}
+            disabled={leaving}
+          >
+            {leaving ? "Leaving..." : "Leave"}
+          </button>
+        )}
       </div>
     </div>
   );

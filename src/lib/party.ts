@@ -188,3 +188,26 @@ export async function joinParty(partyCode: string): Promise<Party> {
     party_code: data[0].party_code,
   };
 }
+
+export async function leaveParty(partyId: string): Promise<void> {
+  await getOrCreateSession();
+
+  const { data, error } = await supabase.rpc("leave_party", {
+    p_party_id: partyId,
+  });
+
+  if (error) {
+    console.error("[Party] leave_party RPC error:", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+
+    throw error;
+  }
+
+  if (data !== true) {
+    throw new Error("Leaving the party was not confirmed.");
+  }
+}
