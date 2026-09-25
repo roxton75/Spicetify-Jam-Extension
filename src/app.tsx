@@ -1,5 +1,7 @@
 import React from "react";
 import { syncProfile } from "./lib/profile";
+import { getOrCreateSession } from "./lib/auth";
+import { startHostQueueSync } from "./lib/queue";
 
 // @ts-expect-error CSS imports are handled at build time.
 import "./party.css";
@@ -400,27 +402,6 @@ async function main() {
     updatePartyButton();
   }
 
-  // createPartyButton();
-
-  // /*
-  //  * Get the existing active party when the extension starts.
-  //  *
-  //  * This is what makes the Party button persistent across
-  //  * sidebar closes and extension UI reloads.
-  //  */
-  // await refreshActiveParty();
-
-  // /*
-  //  * Keep the Party button synchronized with Supabase.
-  //  *
-  //  * Later we can replace this with realtime if necessary,
-  //  * but polling is simple and reliable for now.
-  //  */
-  // activePartyInterval = window.setInterval(() => {
-  //   void refreshActiveParty();
-  // }, 15000);
-
-  // console.log("[Party] Extension loaded");
   createPartyButton();
 
   try {
