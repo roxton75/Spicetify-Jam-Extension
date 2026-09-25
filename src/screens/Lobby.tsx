@@ -4,7 +4,7 @@ import { supabase } from "../lib/supabase";
 import { getOrCreateSession } from "../lib/auth";
 import { startHostPlaybackSync } from "../lib/playback";
 import PartyPlayback from "../components/PartyPlayback";
-
+import PartyQueue from "../components/PartyQueue";
 import {
   touchParty,
   getPartyMembers,
@@ -906,6 +906,8 @@ export default function Lobby({
           </div> */}
           <PartyPlayback partyId={partyId} isHost={isHost} />
         </div>
+
+        <PartyQueue queue={partyQueue} />
       </div>
 
       {/* End | Leave Party Session*/}
