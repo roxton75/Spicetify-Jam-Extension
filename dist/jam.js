@@ -227,7 +227,7 @@ Request ID: `+o),l){let e="\nResources:";for(var f of l){if(!f||"string"!=typeof
 
   .party-playback-ambient {
     position: absolute;
-    inset: -45px;
+    inset: -40px;
 
     z-index: -2;
 
@@ -235,16 +235,16 @@ Request ID: `+o),l){let e="\nResources:";for(var f of l){if(!f||"string"!=typeof
     background-repeat: no-repeat;
     background-size: cover;
 
-    opacity: 0.55;
+    opacity: 0.32;
 
-    filter: blur(32px);
+    filter: blur(38px);
 
-    transform: scale(1.12);
+    transform: scale(1.15);
 
     transition:
-        background-image 700ms ease,
-        opacity 500ms ease;
-    }
+      background-image 700ms ease,
+      opacity 500ms ease;
+  }
 
   .party-playback-overlay {
     position: absolute;
@@ -255,9 +255,9 @@ Request ID: `+o),l){let e="\nResources:";for(var f of l){if(!f||"string"!=typeof
     background:
       linear-gradient(
         to bottom,
-        rgba(0, 0, 0, 0.08) 0%,
-        rgba(0, 0, 0, 0.30) 52%,
-        rgba(0, 0, 0, 0.88) 100%
+        rgba(0, 0, 0, 0.12) 0%,
+        rgba(0, 0, 0, 0.42) 55%,
+        rgba(0, 0, 0, 0.96) 100%
       );
   }
 
@@ -271,21 +271,17 @@ Request ID: `+o),l){let e="\nResources:";for(var f of l){if(!f||"string"!=typeof
     width: 220px;
     height: 220px;
 
-    margin: 16px auto 12px;
+    margin: 16px auto 14px;
 
     border-radius: 8px;
 
     overflow: hidden;
 
+    background: #242424;
+
     box-shadow:
       0 12px 28px rgba(0, 0, 0, 0.45),
-      0 0 35px color-mix(
-        in srgb,
-        var(--party-playback-color) 28%,
-        transparent
-      );
-
-    background: #242424;
+      0 0 35px rgba(0, 0, 0, 0.22);
 
     transition:
       box-shadow 700ms ease,
@@ -328,25 +324,6 @@ Request ID: `+o),l){let e="\nResources:";for(var f of l){if(!f||"string"!=typeof
     text-align: left;
   }
 
-  .party-playback-track {
-    display: flex;
-    align-items: center;
-
-    gap: 7px;
-
-    min-width: 0;
-  }
-
-  .party-playback-state-icon {
-    flex-shrink: 0;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    color: #ffffff;
-  }
-
   .party-playback-title-text {
     min-width: 0;
 
@@ -354,10 +331,10 @@ Request ID: `+o),l){let e="\nResources:";for(var f of l){if(!f||"string"!=typeof
 
     color: #ffffff;
 
-    font-size: 14px;
+    font-size: 18px;
     font-weight: 700;
 
-    line-height: 1.25;
+    line-height: 1.2;
 
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -365,16 +342,17 @@ Request ID: `+o),l){let e="\nResources:";for(var f of l){if(!f||"string"!=typeof
 
   .party-playback-artist {
     margin-top: 3px;
-    margin-left: 23px;
+
+    min-width: 0;
 
     overflow: hidden;
 
-    color: rgba(255, 255, 255, 0.68);
+    color: rgba(255, 255, 255, 0.65);
 
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 500;
 
-    line-height: 1.25;
+    line-height: 1.2;
 
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -388,19 +366,36 @@ Request ID: `+o),l){let e="\nResources:";for(var f of l){if(!f||"string"!=typeof
     display: flex;
     align-items: center;
 
-    gap: 7px;
+    gap: 6px;
 
-    margin-top: 10px;
+    margin-top: 11px;
+  }
+
+  /*
+   * Read-only playback state indicator.
+   * This is not a control.
+   */
+  .party-playback-state-icon {
+    flex-shrink: 0;
+
+    width: 14px;
+    height: 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #ffffff;
   }
 
   .party-playback-time {
     flex-shrink: 0;
 
-    color: rgba(255, 255, 255, 0.58);
-
-    font-family: "Geist Mono", monospace;
+    color: rgba(255, 255, 255, 0.55);
 
     font-size: 9px;
+    font-weight: 500;
+
     line-height: 1;
   }
 
@@ -415,7 +410,7 @@ Request ID: `+o),l){let e="\nResources:";for(var f of l){if(!f||"string"!=typeof
 
     border-radius: 999px;
 
-    background: rgba(255, 255, 255, 0.20);
+    background: rgba(255, 255, 255, 0.22);
   }
 
   .party-playback-progress-fill {
@@ -487,7 +482,7 @@ Request ID: `+o),l){let e="\nResources:";for(var f of l){if(!f||"string"!=typeof
     font-size: 12px;
     line-height: 1.4;
   }
-`;function yn(e){e=Math.max(0,Math.floor(e/1e3));return Math.floor(e/60)+":"+String(e%60).padStart(2,"0")}function bn({partyId:r}){let e,t,a,[s,n]=(0,L.useState)(null),[i,o]=(0,L.useState)(0),l=(0,L.useRef)(0),c=(0,L.useRef)(Date.now());var h;return(0,L.useEffect)(()=>{let t=!0;(async()=>{try{var e=await(async e=>{await x();var{data:e,error:t}=await R.from("party_playback_state").select("*").eq("party_id",e).maybeSingle();if(t)throw console.error("[Party] Failed to load playback state:",t),t;return e})(r);t&&e&&(n(e),l.current=e.position_ms,c.current=Date.now(),o(e.position_ms))}catch(e){console.error("[Party] Failed to load playback for UI:",e)}})();let e=((e,t)=>{let r=R.channel("party-playback-"+e).on("postgres_changes",{event:"*",schema:"public",table:"party_playback_state",filter:"party_id=eq."+e},e=>{console.log("[Party] Playback change:",e),e.new&&t(e.new)}).subscribe(e=>{console.log("[Party] Playback realtime status:",e)});return()=>{R.removeChannel(r)}})(r,e=>{t&&(n(e),l.current=e.position_ms,c.current=Date.now(),o(e.position_ms))});return()=>{t=!1,e()}},[r]),(0,L.useEffect)(()=>{if(s){var t=()=>{var e;s.is_playing?(e=Date.now()-c.current,e=l.current+e,o(Math.min(e,s.duration_ms))):o(l.current)};t();let e=window.setInterval(t,250);return()=>{window.clearInterval(e)}}o(0)},[null==s?void 0:s.track_uri,null==s?void 0:s.is_playing,null==s?void 0:s.position_ms,null==s?void 0:s.duration_ms]),s&&Boolean(s.track_name)?(h=Math.max(s.duration_ms,1),h=100*Math.min(Math.max(i/h,0),1),L.default.createElement("div",{className:"party-playback"},L.default.createElement("style",null,gn),L.default.createElement("div",{className:"party-playback-ambient",style:{backgroundImage:s.artwork_url?`url("${s.artwork_url}")`:void 0}}),L.default.createElement("div",{className:"party-playback-overlay"}),L.default.createElement("div",{className:"party-playback-artwork-wrap"},s.artwork_url?L.default.createElement("img",{className:"party-playback-artwork",src:s.artwork_url,alt:null!=(t=null!=(e=s.album_name)?e:s.track_name)?t:"Album artwork"}):L.default.createElement("div",{className:"party-playback-placeholder"},L.default.createElement(en,{size:32,weight:"fill"}))),L.default.createElement("div",{className:"party-playback-info"},L.default.createElement("div",{className:"party-playback-track"},L.default.createElement("div",{className:"party-playback-state-icon"},s.is_playing?L.default.createElement(Hs,{size:14,weight:"fill"}):L.default.createElement(Bs,{size:14,weight:"fill"})),L.default.createElement("div",{className:"party-playback-title-text"},s.track_name)),L.default.createElement("div",{className:"party-playback-artist"},null!=(a=s.artist_name)?a:"Unknown artist"),L.default.createElement("div",{className:"party-playback-progress"},L.default.createElement("span",{className:"party-playback-time"},yn(i)),L.default.createElement("div",{className:"party-playback-progress-track"},L.default.createElement("div",{className:"party-playback-progress-fill",style:{width:h+"%"}})),L.default.createElement("span",{className:"party-playback-time"},yn(s.duration_ms)))))):L.default.createElement("div",{className:"party-playback-empty"},L.default.createElement("style",null,gn),L.default.createElement("div",{className:"party-playback-empty-icon"},L.default.createElement(en,{size:22,weight:"fill"})),L.default.createElement("div",{className:"party-playback-empty-title"},"Nothing playing"),L.default.createElement("div",{className:"party-playback-empty-description"},"Start playing a song in Spotify to share it with the party."))}async function wn(e){await x();var{data:e,error:t}=await R.from("party_members").select(`
+`;function yn(e){e=Math.max(0,Math.floor(e/1e3));return Math.floor(e/60)+":"+String(e%60).padStart(2,"0")}function bn({partyId:r}){let e,t,a,[s,n]=(0,L.useState)(null),[i,o]=(0,L.useState)(0),l=(0,L.useRef)(0),c=(0,L.useRef)(Date.now());var h;return(0,L.useEffect)(()=>{let t=!0;(async()=>{try{var e=await(async e=>{await x();var{data:e,error:t}=await R.from("party_playback_state").select("*").eq("party_id",e).maybeSingle();if(t)throw console.error("[Party] Failed to load playback state:",t),t;return e})(r);t&&e&&(n(e),l.current=e.position_ms,c.current=Date.now(),o(e.position_ms))}catch(e){console.error("[Party] Failed to load playback for UI:",e)}})();let e=((e,t)=>{let r=R.channel("party-playback-"+e).on("postgres_changes",{event:"*",schema:"public",table:"party_playback_state",filter:"party_id=eq."+e},e=>{console.log("[Party] Playback change:",e),e.new&&t(e.new)}).subscribe(e=>{console.log("[Party] Playback realtime status:",e)});return()=>{R.removeChannel(r)}})(r,e=>{t&&(n(e),l.current=e.position_ms,c.current=Date.now(),o(e.position_ms))});return()=>{t=!1,e()}},[r]),(0,L.useEffect)(()=>{if(s){var t=()=>{var e;s.is_playing?(e=Date.now()-c.current,e=l.current+e,o(Math.min(e,s.duration_ms))):o(l.current)};t();let e=window.setInterval(t,250);return()=>{window.clearInterval(e)}}o(0)},[null==s?void 0:s.track_uri,null==s?void 0:s.is_playing,null==s?void 0:s.position_ms,null==s?void 0:s.duration_ms]),s&&Boolean(s.track_name)?(h=Math.max(s.duration_ms,1),h=100*Math.min(Math.max(i/h,0),1),L.default.createElement("div",{className:"party-playback"},L.default.createElement("style",null,gn),L.default.createElement("div",{className:"party-playback-ambient",style:{backgroundImage:s.artwork_url?`url("${s.artwork_url}")`:void 0}}),L.default.createElement("div",{className:"party-playback-overlay"}),L.default.createElement("div",{className:"party-playback-artwork-wrap"},s.artwork_url?L.default.createElement("img",{className:"party-playback-artwork",src:s.artwork_url,alt:null!=(t=null!=(e=s.album_name)?e:s.track_name)?t:"Album artwork"}):L.default.createElement("div",{className:"party-playback-placeholder"},L.default.createElement(en,{size:32,weight:"fill"}))),L.default.createElement("div",{className:"party-playback-info"},L.default.createElement("div",{className:"party-playback-title-text"},s.track_name),L.default.createElement("div",{className:"party-playback-artist"},null!=(a=s.artist_name)?a:"Unknown artist"),L.default.createElement("div",{className:"party-playback-progress"},L.default.createElement("div",{className:"party-playback-state-icon"},s.is_playing?L.default.createElement(Hs,{size:13,weight:"fill"}):L.default.createElement(Bs,{size:13,weight:"fill"})),L.default.createElement("span",{className:"party-playback-time"},yn(i)),L.default.createElement("div",{className:"party-playback-progress-track"},L.default.createElement("div",{className:"party-playback-progress-fill",style:{width:h+"%"}})),L.default.createElement("span",{className:"party-playback-time"},yn(s.duration_ms)))))):L.default.createElement("div",{className:"party-playback-empty"},L.default.createElement("style",null,gn),L.default.createElement("div",{className:"party-playback-empty-icon"},L.default.createElement(en,{size:22,weight:"fill"})),L.default.createElement("div",{className:"party-playback-empty-title"},"Nothing playing"),L.default.createElement("div",{className:"party-playback-empty-description"},"Start playing a song in Spotify to share it with the party."))}async function wn(e){await x();var{data:e,error:t}=await R.from("party_members").select(`
       user_id,
       role,
       joined_at,
