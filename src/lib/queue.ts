@@ -150,7 +150,8 @@ export async function getHostQueue(): Promise<{
 
   const nextTracks = queue?.nextTracks ?? [];
 
-  const tracks: PartyQueueItem[] = [];
+  const manualTracks: PartyQueueItem[] = [];
+  const autoplayTracks: PartyQueueItem[] = [];
 
   for (const track of nextTracks) {
     const normalized = normalizeTrack(track);
@@ -159,10 +160,31 @@ export async function getHostQueue(): Promise<{
       continue;
     }
 
-    normalized.position = tracks.length;
-
-    tracks.push(normalized);
+    if (track.provider === "queue") {
+      manualTracks.push(normalized);
+    } else if (track.provider === "autoplay") {
+      autoplayTracks.push(normalized);
+    }
   }
+
+  /*
+   * Party queue priority:
+   *
+   * 1. Most recently manually queued track
+   * 2. Older manually queued tracks
+   * 3. Spotify autoplay recommendations
+   *
+   * Manual tracks are reversed because Spotify exposes
+   * them in oldest → newest order.
+   *
+   * Autoplay tracks keep Spotify's original order.
+   */
+  const orderedTracks = [...manualTracks.reverse(), ...autoplayTracks];
+
+  const tracks = orderedTracks.map((track, index) => ({
+    ...track,
+    position: index,
+  }));
 
   return {
     revision: queue?.queueRevision != null ? String(queue.queueRevision) : null,
