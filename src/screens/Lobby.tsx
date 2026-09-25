@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { getOrCreateSession } from "../lib/auth";
 import { startHostPlaybackSync } from "../lib/playback";
 import PartyPlayback from "../components/PartyPlayback";
+
 import {
   touchParty,
   getPartyMembers,
@@ -13,6 +14,12 @@ import {
   expirePartySession,
   leaveParty,
 } from "../lib/party";
+
+import {
+  getPartyQueue,
+  subscribeToPartyQueue,
+  PartyQueueItem,
+} from "../lib/queue";
 
 import {
   ArrowLeft,
@@ -438,6 +445,7 @@ export default function Lobby({
   const [copied, setCopied] = React.useState(false);
   const [members, setMembers] = React.useState<PartyMember[]>([]);
   const [currentUserId, setCurrentUserId] = React.useState<string | null>(null);
+  const [partyQueue, setPartyQueue] = React.useState<PartyQueueItem[]>([]);
   const [ending, setEnding] = React.useState(false);
   const [leaving, setLeaving] = React.useState(false);
   const [soloSince, setSoloSince] = React.useState<string | null>(null);
@@ -593,6 +601,39 @@ export default function Lobby({
     return () => {
       active = false;
       window.clearInterval(interval);
+    };
+  }, [partyId]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadQueue = async () => {
+      try {
+        const queue = await getPartyQueue(partyId);
+
+        if (active) {
+          setPartyQueue(queue);
+
+          console.log("[Party] Initial queue:", queue);
+        }
+      } catch (error) {
+        console.error("[Party] Failed to load queue:", error);
+      }
+    };
+
+    loadQueue();
+
+    const unsubscribe = subscribeToPartyQueue(partyId, (queue) => {
+      if (!active) return;
+
+      setPartyQueue(queue);
+
+      console.log("[Party] Queue received:", queue);
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
     };
   }, [partyId]);
 
