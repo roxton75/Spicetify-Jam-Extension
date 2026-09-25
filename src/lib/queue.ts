@@ -12,15 +12,20 @@ export interface PartyQueueItem {
 }
 
 interface SpotifyQueueTrack {
-  uri?: string;
-  uid?: string | null;
-  metadata?: Record<string, string | undefined>;
+  contextTrack?: {
+    uri?: string;
+    uid?: string | null;
+    metadata?: Record<string, string | undefined>;
+  };
+  removed?: unknown[];
+  blocked?: unknown[];
+  provider?: string;
 }
 
 interface SpotifyQueue {
   nextTracks?: SpotifyQueueTrack[];
   prevTracks?: SpotifyQueueTrack[];
-  queueRevision?: string;
+  queueRevision?: string | bigint;
   track?: SpotifyQueueTrack;
 }
 
@@ -37,9 +42,20 @@ function resolveSpotifyImageUrl(imageUri: string | null): string | null {
 }
 
 function normalizeTrack(track: SpotifyQueueTrack): PartyQueueItem | null {
-  const metadata = track.metadata ?? {};
+  // Only synchronize tracks explicitly added to Spotify's queue.
+  if (track.provider !== "queue") {
+    return null;
+  }
 
-  const trackUri = track.uri ?? metadata.uri ?? null;
+  const contextTrack = track.contextTrack;
+
+  if (!contextTrack) {
+    return null;
+  }
+
+  const metadata = contextTrack.metadata ?? {};
+
+  const trackUri = contextTrack.uri ?? metadata.uri ?? null;
 
   if (!trackUri) {
     return null;
@@ -95,7 +111,7 @@ export async function getHostQueue(): Promise<{
   }
 
   return {
-    revision: queue?.queueRevision ?? null,
+    revision: queue?.queueRevision != null ? String(queue.queueRevision) : null,
     tracks,
   };
 }
@@ -116,6 +132,8 @@ export async function publishPartyQueue(
       duration_ms: track.duration_ms,
     },
   }));
+
+  console.log("[Party] Queue payload:", JSON.stringify(queuePayload, null, 2));
 
   const { error } = await supabase.rpc("replace_party_queue", {
     p_party_id: partyId,

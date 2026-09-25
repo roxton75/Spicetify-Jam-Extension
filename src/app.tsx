@@ -1,4 +1,5 @@
 import React from "react";
+
 import { syncProfile } from "./lib/profile";
 import { getOrCreateSession } from "./lib/auth";
 import { startHostQueueSync } from "./lib/queue";
@@ -7,11 +8,8 @@ import { startHostQueueSync } from "./lib/queue";
 import "./party.css";
 
 import Home from "./screens/Home";
-//import CreateParty from "./screens/CreateParty";
 import JoinParty from "./screens/JoinParty";
 import Lobby from "./screens/Lobby";
-
-import { UsersRound } from "lucide-react";
 
 import {
   createParty,
@@ -52,6 +50,53 @@ async function main() {
 
   let activePartyInterval: number | null = null;
 
+  let hostQueueCleanup: (() => void) | null = null;
+  let hostQueuePartyId: string | null = null;
+
+  function stopHostQueueSync() {
+    if (hostQueueCleanup) {
+      hostQueueCleanup();
+      hostQueueCleanup = null;
+    }
+
+    hostQueuePartyId = null;
+  }
+
+  async function updateHostQueueSync(
+    targetPartyId: string | null,
+    members: Awaited<ReturnType<typeof getPartyMembers>>,
+  ) {
+    if (!targetPartyId) {
+      stopHostQueueSync();
+      return;
+    }
+
+    const session = await getOrCreateSession();
+
+    const currentMember = members.find(
+      (member) => member.user_id === session.user.id,
+    );
+
+    const isHost = currentMember?.role === "host";
+
+    if (!isHost) {
+      stopHostQueueSync();
+      return;
+    }
+
+    // Already syncing this party.
+    if (hostQueuePartyId === targetPartyId && hostQueueCleanup) {
+      return;
+    }
+
+    stopHostQueueSync();
+
+    hostQueuePartyId = targetPartyId;
+    hostQueueCleanup = startHostQueueSync(targetPartyId);
+
+    console.log("[Party] Host queue sync started:", targetPartyId);
+  }
+
   async function refreshActiveParty() {
     try {
       const party = await getActiveParty();
@@ -59,6 +104,8 @@ async function main() {
       if (!party) {
         activeParty = null;
         partyUserCount = 0;
+
+        stopHostQueueSync();
 
         updatePartyButton();
         return;
@@ -73,6 +120,8 @@ async function main() {
       const members = await getPartyMembers(party.partyId);
 
       partyUserCount = members.length;
+
+      await updateHostQueueSync(party.partyId, members);
 
       updatePartyButton();
 
@@ -164,6 +213,8 @@ async function main() {
                 partyCode: party.party_code,
               };
 
+              await updateHostQueueSync(party.party_id, members);
+
               updatePartyButton();
 
               currentScreen = "lobby";
@@ -191,21 +242,6 @@ async function main() {
             currentScreen = "home";
             renderPartyScreen(panel);
           }}
-          // onJoinParty={(code) => {
-          //   /*
-          //    * IMPORTANT:
-          //    * The real join_party() flow is not implemented here yet.
-          //    *
-          //    * This currently only moves the UI to the lobby.
-          //    * We will replace this with the real Supabase join flow.
-          //    */
-
-          //   partyCode = code;
-
-          //   currentScreen = "lobby";
-
-          //   renderPartyScreen(panel);
-          // }}
           onJoinParty={async (code) => {
             try {
               console.log("[Party] Joining party:", code);
@@ -226,6 +262,8 @@ async function main() {
                 partyId: party.party_id,
                 partyCode: party.party_code,
               };
+
+              await updateHostQueueSync(party.party_id, members);
 
               updatePartyButton();
 
@@ -263,8 +301,8 @@ async function main() {
             partyCode = "";
             partyUserCount = 0;
 
+            stopHostQueueSync();
             updatePartyButton();
-
             closeParty();
           }}
         />,
