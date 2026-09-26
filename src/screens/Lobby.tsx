@@ -21,6 +21,8 @@ import {
   PartyQueueItem,
 } from "../lib/queue";
 
+import { startMemberPlayerSync } from "../lib/player";
+
 import {
   ArrowLeft,
   Copy,
@@ -474,6 +476,18 @@ export default function Lobby({
   }, [partyId, isHost]);
 
   useEffect(() => {
+    if (isHost) {
+      return;
+    }
+
+    console.log("[Party] Starting member player sync:", partyId);
+
+    const cleanup = startMemberPlayerSync(partyId);
+
+    return cleanup;
+  }, [partyId, isHost]);
+
+  useEffect(() => {
     let active = true;
 
     const loadCurrentUser = async () => {
@@ -893,17 +907,6 @@ export default function Lobby({
             </div>
           </div>
 
-          {/* <div className="party-playback-empty">
-            <div className="party-playback-icon">
-              <VinylRecordIcon size={22} weight="fill" />
-            </div>
-
-            <div className="party-playback-title">Nothing playing</div>
-
-            <div className="party-playback-description">
-              Start playing a song in Spotify to share it with the party.
-            </div>
-          </div> */}
           <PartyPlayback partyId={partyId} isHost={isHost} />
         </div>
 
