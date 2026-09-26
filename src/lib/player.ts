@@ -76,10 +76,12 @@ export function startMemberPlayerSync(partyId: string) {
         currentUri,
         hostUri: state.track_uri,
         trackName: state.track_name,
+        artistName: state.artist_name,
         isPlaying: state.is_playing,
+        positionMs: state.position_ms,
         updatedAt: state.updated_at,
       });
-
+      
       /*
        * HOST IS PLAYING A DIFFERENT TRACK
        */
