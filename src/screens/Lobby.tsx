@@ -491,8 +491,8 @@ export default function Lobby({
     const cleanup = startMemberPlayerSync(partyId);
 
     return cleanup;
-  }, [partyId, currentUserId, currentMember, isHost]);
-
+  }, [partyId, currentUserId, isHost]);
+  
   useEffect(() => {
     let active = true;
 
