@@ -962,10 +962,39 @@ async function main() {
     updatePartyButton();
   }
 
+  // function closeParty() {
+  //   stopOverlayPositionTracking();
+
+  //   if (partyRoot) {
+  //     partyRoot.unmount();
+  //     partyRoot = null;
+  //   }
+
+  //   if (partyOverlay) {
+  //     partyOverlay.remove();
+  //     partyOverlay = null;
+  //   }
+
+  //   /*
+  //    * Do NOT destroy the active party state here.
+  //    *
+  //    * The user may simply be closing the sidebar.
+  //    * The Party button must still be able to recover
+  //    * the active Lobby.
+  //    */
+  //   partyOpen = false;
+
+  //   updatePartyButton();
+  // }
+
   function closeParty() {
+    console.log("[Party DEBUG] closeParty() CALLED");
+    console.trace("[Party DEBUG] closeParty call stack");
+
     stopOverlayPositionTracking();
 
     if (partyRoot) {
+      console.log("[Party DEBUG] Unmounting partyRoot");
       partyRoot.unmount();
       partyRoot = null;
     }
@@ -975,13 +1004,6 @@ async function main() {
       partyOverlay = null;
     }
 
-    /*
-     * Do NOT destroy the active party state here.
-     *
-     * The user may simply be closing the sidebar.
-     * The Party button must still be able to recover
-     * the active Lobby.
-     */
     partyOpen = false;
 
     updatePartyButton();
