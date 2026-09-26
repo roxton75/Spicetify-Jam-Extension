@@ -81,12 +81,13 @@ async function loadHostTrack(sync: MemberTrackSync, state: PartyPlaybackState) {
   }
 
   const player = Spicetify.Player;
-
   const currentUri = player.data?.item?.uri ?? null;
 
   /*
-   * If we are already on the host's track,
-   * we don't need to load it again.
+   * Same track:
+   *
+   * Do NOT seek again.
+   * The member should continue playing naturally.
    */
   if (currentUri === state.track_uri) {
     return;
@@ -99,11 +100,10 @@ async function loadHostTrack(sync: MemberTrackSync, state: PartyPlaybackState) {
       currentUri,
       hostUri: state.track_uri,
       track: state.track_name,
-      artist: state.artist_name,
     });
 
     /*
-     * Load the host's track into this Spotify client.
+     * Load the new track.
      */
     await player.playUri(state.track_uri);
 
@@ -112,13 +112,11 @@ async function loadHostTrack(sync: MemberTrackSync, state: PartyPlaybackState) {
     }
 
     /*
-     * Wait for Spotify Desktop to update player.data
-     * after playUri().
+     * Wait until Spotify has actually switched tracks.
      */
-    const maxWait = 5000;
     const startTime = Date.now();
 
-    while (!sync.stopped && Date.now() - startTime < maxWait) {
+    while (!sync.stopped && Date.now() - startTime < 5000) {
       const loadedUri = player.data?.item?.uri ?? null;
 
       if (loadedUri === state.track_uri) {
@@ -137,7 +135,7 @@ async function loadHostTrack(sync: MemberTrackSync, state: PartyPlaybackState) {
     const loadedUri = player.data?.item?.uri ?? null;
 
     if (loadedUri !== state.track_uri) {
-      console.warn("[Party] Spotify did not load host track in time:", {
+      console.warn("[Party] Host track failed to load:", {
         expected: state.track_uri,
         actual: loadedUri,
       });
@@ -146,13 +144,18 @@ async function loadHostTrack(sync: MemberTrackSync, state: PartyPlaybackState) {
     }
 
     /*
-     * Calculate where the host should be right now.
+     * Calculate where the host is RIGHT NOW.
      *
-     * position_ms = position when Supabase was updated
-     * updated_at  = when that position was recorded
+     * Example:
      *
-     * If the host is playing, add the time that has passed
-     * since the state was written.
+     * Supabase stored:
+     * position = 120000
+     *
+     * Supabase updated:
+     * 2 seconds ago
+     *
+     * Host should now be around:
+     * 122000
      */
     let targetPosition = Math.max(0, state.position_ms);
 
@@ -166,7 +169,7 @@ async function loadHostTrack(sync: MemberTrackSync, state: PartyPlaybackState) {
     }
 
     /*
-     * Never seek beyond the actual track duration.
+     * Clamp to track duration.
      */
     const duration = player.getDuration();
 
@@ -175,12 +178,15 @@ async function loadHostTrack(sync: MemberTrackSync, state: PartyPlaybackState) {
     }
 
     /*
-     * Move the member to the host's current position.
+     * IMPORTANT:
+     *
+     * Seek only ONCE, immediately after loading
+     * a NEW host track.
      */
     player.seek(Math.round(targetPosition));
 
     /*
-     * Match the host's play/pause state.
+     * Match host play/pause state.
      */
     if (state.is_playing) {
       player.play();
@@ -188,10 +194,9 @@ async function loadHostTrack(sync: MemberTrackSync, state: PartyPlaybackState) {
       player.pause();
     }
 
-    console.log("[Party] Host track synchronized:", {
+    console.log("[Party] Member synchronized:", {
       track: state.track_name,
-      hostPosition: state.position_ms,
-      targetPosition,
+      position: Math.round(targetPosition),
       isPlaying: state.is_playing,
     });
   } catch (error) {
