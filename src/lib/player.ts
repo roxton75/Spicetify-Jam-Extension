@@ -7,46 +7,46 @@ import {
 const DRIFT_THRESHOLD_MS = 1500;
 const SYNC_INTERVAL_MS = 3000;
 
-function waitForTrack(trackUri: string, timeoutMs = 5000): Promise<boolean> {
-  return new Promise((resolve) => {
-    const player = Spicetify.Player;
+// function waitForTrack(trackUri: string, timeoutMs = 5000): Promise<boolean> {
+//   return new Promise((resolve) => {
+//     const player = Spicetify.Player;
 
-    const currentUri = player.data?.item?.uri ?? null;
+//     const currentUri = player.data?.item?.uri ?? null;
 
-    if (currentUri === trackUri) {
-      resolve(true);
-      return;
-    }
+//     if (currentUri === trackUri) {
+//       resolve(true);
+//       return;
+//     }
 
-    let finished = false;
+//     let finished = false;
 
-    const finish = (success: boolean) => {
-      if (finished) return;
+//     const finish = (success: boolean) => {
+//       if (finished) return;
 
-      finished = true;
+//       finished = true;
 
-      window.clearTimeout(timeout);
+//       window.clearTimeout(timeout);
 
-      player.removeEventListener("songchange", handleSongChange);
+//       player.removeEventListener("songchange", handleSongChange);
 
-      resolve(success);
-    };
+//       resolve(success);
+//     };
 
-    const handleSongChange = () => {
-      const loadedUri = player.data?.item?.uri ?? null;
+//     const handleSongChange = () => {
+//       const loadedUri = player.data?.item?.uri ?? null;
 
-      if (loadedUri === trackUri) {
-        finish(true);
-      }
-    };
+//       if (loadedUri === trackUri) {
+//         finish(true);
+//       }
+//     };
 
-    const timeout = window.setTimeout(() => {
-      finish(false);
-    }, timeoutMs);
+//     const timeout = window.setTimeout(() => {
+//       finish(false);
+//     }, timeoutMs);
 
-    player.addEventListener("songchange", handleSongChange);
-  });
-}
+//     player.addEventListener("songchange", handleSongChange);
+//   });
+// }
 
 export function startMemberPlayerSync(partyId: string) {
   let stopped = false;
@@ -75,28 +75,41 @@ export function startMemberPlayerSync(partyId: string) {
       /*
        * HOST IS PLAYING A DIFFERENT TRACK
        */
-      if (currentUri !== state.track_uri) {
-        console.log(
-          "[Party] Member switching to host track:",
-          state.track_name,
-          state.artist_name,
-        );
+  if (currentUri !== state.track_uri) {
+    console.log(
+      "[Party] Member switching to host track:",
+      state.track_name,
+      state.artist_name,
+      state.track_uri,
+    );
 
-        await player.playUri(state.track_uri);
+    await player.playUri(state.track_uri);
 
-        if (stopped) {
-          return;
-        }
+    if (stopped) {
+      return;
+    }
 
-        const loaded = await waitForTrack(state.track_uri);
+    // Give Spotify time to update the player state.
+    await new Promise((resolve) => window.setTimeout(resolve, 500));
 
-        if (!loaded) {
-          console.warn(
-            "[Party] Timed out waiting for host track to load:",
-            state.track_uri,
-          );
-        }
+    const loadedUri = player.data?.item?.uri ?? null;
+
+    if (loadedUri !== state.track_uri) {
+      console.warn("[Party] Host track has not loaded yet:", {
+        expected: state.track_uri,
+        actual: loadedUri,
+      });
+
+      // Retry once.
+      await player.playUri(state.track_uri);
+
+      if (stopped) {
+        return;
       }
+
+      await new Promise((resolve) => window.setTimeout(resolve, 500));
+    }
+  }
 
       if (stopped) {
         return;
