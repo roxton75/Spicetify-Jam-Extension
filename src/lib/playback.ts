@@ -153,7 +153,16 @@ export function subscribeToPlayback(
         console.log("[Party] Playback change:", payload);
 
         if (payload.new) {
-          onChange(payload.new as PartyPlaybackState);
+          const playbackState = payload.new as PartyPlaybackState;
+
+          console.log("[Party DEBUG] Sending playback state to member:", {
+            partyId,
+            track_uri: playbackState.track_uri,
+            track_name: playbackState.track_name,
+            is_playing: playbackState.is_playing,
+          });
+
+          onChange(playbackState);
         }
       },
     )

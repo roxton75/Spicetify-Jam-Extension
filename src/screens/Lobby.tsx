@@ -21,7 +21,7 @@ import {
   PartyQueueItem,
 } from "../lib/queue";
 
-import { startMemberPlayerSync } from "../lib/player";
+import { startMemberPlayerSync, stopMemberPlayerSync } from "../lib/player";
 
 import {
   ArrowLeft,
@@ -475,24 +475,29 @@ export default function Lobby({
     };
   }, [partyId, isHost]);
 
+  // useEffect(() => {
+  //   // Wait until we actually know the current user's role.
+  //   if (!currentUserId || !currentMember) {
+  //     return;
+  //   }
+
+  //   // Host uses startHostPlaybackSync instead.
+  //   if (isHost) {
+  //     return;
+  //   }
+
+  //   console.log("[Party] Starting member player sync:", partyId);
+
+  //   const cleanup = startMemberPlayerSync(partyId);
+
+  //   return cleanup;
+  // }, [partyId, currentUserId, isHost]);
   useEffect(() => {
-    // Wait until we actually know the current user's role.
-    if (!currentUserId || !currentMember) {
-      return;
-    }
+    if (!currentUserId || !currentMember || isHost) return;
 
-    // Host uses startHostPlaybackSync instead.
-    if (isHost) {
-      return;
-    }
-
-    console.log("[Party] Starting member player sync:", partyId);
-
-    const cleanup = startMemberPlayerSync(partyId);
-
-    return cleanup;
+    startMemberPlayerSync(partyId);
   }, [partyId, currentUserId, isHost]);
-  
+
   useEffect(() => {
     let active = true;
 
@@ -766,6 +771,7 @@ export default function Lobby({
     setLeaving(true);
 
     try {
+      stopMemberPlayerSync();
       await leaveParty(partyId);
 
       console.log("[Party] Left party:", partyId);
