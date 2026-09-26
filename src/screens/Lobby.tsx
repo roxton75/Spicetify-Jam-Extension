@@ -475,17 +475,6 @@ export default function Lobby({
     };
   }, [partyId, isHost]);
 
-  // useEffect(() => {
-  //   if (isHost) {
-  //     return;
-  //   }
-
-  //   console.log("[Party] Starting member player sync:", partyId);
-
-  //   const cleanup = startMemberPlayerSync(partyId);
-
-  //   return cleanup;
-  // }, [partyId, isHost]);
   useEffect(() => {
     // Wait until we actually know the current user's role.
     if (!currentUserId || !currentMember) {

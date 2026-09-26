@@ -49,6 +49,7 @@ async function main() {
   let partyRoot: ReturnType<typeof Spicetify.ReactDOM.createRoot> | null = null;
 
   let activePartyInterval: number | null = null;
+  let partyPanelObserver: MutationObserver | null = null;
 
   let hostQueueCleanup: (() => void) | null = null;
   let hostQueuePartyId: string | null = null;
@@ -181,6 +182,56 @@ async function main() {
 
   function getSidebar(): HTMLElement | null {
     return document.getElementById("Desktop_PanelContainer_Id");
+  }
+
+  function startPartyPanelObserver() {
+    if (partyPanelObserver) {
+      return;
+    }
+
+    partyPanelObserver = new MutationObserver(() => {
+      if (!partyOpen) {
+        return;
+      }
+
+      const panel = document.getElementById("party-panel");
+
+      if (panel) {
+        return;
+      }
+
+      console.log("[Party] Party panel disappeared. Recreating...");
+
+      // The old React root belongs to the removed DOM node.
+      if (partyRoot) {
+        try {
+          partyRoot.unmount();
+        } catch (error) {
+          console.warn("[Party] Failed to unmount old Party root:", error);
+        }
+
+        partyRoot = null;
+      }
+
+      createPartyPanel();
+
+      const newPanel = document.getElementById("party-panel");
+
+      if (!newPanel) {
+        return;
+      }
+
+      newPanel.style.display = "block";
+
+      renderPartyScreen(newPanel);
+    });
+
+    partyPanelObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    console.log("[Party] Party panel observer started.");
   }
 
   function renderPartyScreen(panel: HTMLElement) {
@@ -441,6 +492,7 @@ async function main() {
   }
 
   createPartyButton();
+  startPartyPanelObserver();
 
   try {
     const profile = await syncProfile();
