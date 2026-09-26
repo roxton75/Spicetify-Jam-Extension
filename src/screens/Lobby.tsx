@@ -475,25 +475,19 @@ export default function Lobby({
     };
   }, [partyId, isHost]);
 
-  // useEffect(() => {
-  //   // Wait until we actually know the current user's role.
-  //   if (!currentUserId || !currentMember) {
-  //     return;
-  //   }
-
-  //   // Host uses startHostPlaybackSync instead.
-  //   if (isHost) {
-  //     return;
-  //   }
-
-  //   console.log("[Party] Starting member player sync:", partyId);
-
-  //   const cleanup = startMemberPlayerSync(partyId);
-
-  //   return cleanup;
-  // }, [partyId, currentUserId, isHost]);
   useEffect(() => {
-    if (!currentUserId || !currentMember || isHost) return;
+    console.log("[Party TEST] MEMBER EFFECT:", {
+      partyId,
+      currentUserId,
+      isHost,
+    });
+
+    if (isHost) {
+      console.log("[Party TEST] HOST - skipping member sync");
+      return;
+    }
+
+    console.log("[Party TEST] STARTING MEMBER SYNC NOW");
 
     startMemberPlayerSync(partyId);
   }, [partyId, currentUserId, isHost]);
