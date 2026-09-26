@@ -72,44 +72,52 @@ export function startMemberPlayerSync(partyId: string) {
 
       const currentUri = player.data?.item?.uri ?? null;
 
+      console.log("[Party DEBUG] Member playback comparison:", {
+        currentUri,
+        hostUri: state.track_uri,
+        trackName: state.track_name,
+        isPlaying: state.is_playing,
+        updatedAt: state.updated_at,
+      });
+
       /*
        * HOST IS PLAYING A DIFFERENT TRACK
        */
-  if (currentUri !== state.track_uri) {
-    console.log(
-      "[Party] Member switching to host track:",
-      state.track_name,
-      state.artist_name,
-      state.track_uri,
-    );
+      if (currentUri !== state.track_uri) {
+        console.log(
+          "[Party] Member switching to host track:",
+          state.track_name,
+          state.artist_name,
+          state.track_uri,
+        );
 
-    await player.playUri(state.track_uri);
+        await player.playUri(state.track_uri);
 
-    if (stopped) {
-      return;
-    }
+        if (stopped) {
+          return;
+        }
 
-    // Give Spotify time to update the player state.
-    await new Promise((resolve) => window.setTimeout(resolve, 500));
+        // Give Spotify time to update the player state.
+        await new Promise((resolve) => window.setTimeout(resolve, 500));
 
-    const loadedUri = player.data?.item?.uri ?? null;
+        const loadedUri = player.data?.item?.uri ?? null;
 
-    if (loadedUri !== state.track_uri) {
-      console.warn("[Party] Host track has not loaded yet:", {
-        expected: state.track_uri,
-        actual: loadedUri,
-      });
+        if (loadedUri !== state.track_uri) {
+          console.warn("[Party] Host track has not loaded yet:", {
+            expected: state.track_uri,
+            actual: loadedUri,
+          });
 
-      // Retry once.
-      await player.playUri(state.track_uri);
+          // Retry once.
+          await player.playUri(state.track_uri);
 
-      if (stopped) {
-        return;
+          if (stopped) {
+            return;
+          }
+
+          await new Promise((resolve) => window.setTimeout(resolve, 500));
+        }
       }
-
-      await new Promise((resolve) => window.setTimeout(resolve, 500));
-    }
-  }
 
       if (stopped) {
         return;
