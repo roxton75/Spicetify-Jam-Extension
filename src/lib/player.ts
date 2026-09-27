@@ -137,9 +137,12 @@ async function loadHostTrack(sync: MemberTrackSync, state: PartyPlaybackState) {
     /*
      * Match host play/pause state.
      */
-    if (state.is_playing) {
-      player.play();
-    } else {
+    // if (state.is_playing) {
+    //   player.play();
+    // } else {
+    //   player.pause();
+    // }
+    if (!state.is_playing) {
       player.pause();
     }
 

@@ -338,6 +338,13 @@ export function startHostPlaybackSync(partyId: string) {
 
       const item = data?.item ?? data?.track;
 
+      console.log("[SYNC TEST] HOST PUBLISH", {
+        time: Date.now(),
+        track: player.data?.item?.name,
+        position: player.getProgress(),
+        isPlaying: player.isPlaying(),
+      });
+
       /*
        * No track currently loaded.
        */
