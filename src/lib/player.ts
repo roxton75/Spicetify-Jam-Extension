@@ -90,7 +90,7 @@ async function loadHostTrack(sync: MemberTrackSync, state: PartyPlaybackState) {
          * - Spotify playback timing
          * - realtime delivery
          */
-        const POSITION_CORRECTION_THRESHOLD = 2000;
+        const POSITION_CORRECTION_THRESHOLD = 500;
 
         if (difference >= POSITION_CORRECTION_THRESHOLD) {
           console.log("[Party] Correcting playback position:", {
