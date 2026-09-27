@@ -28,15 +28,26 @@ async function loadHostTrack(sync: MemberTrackSync, state: PartyPlaybackState) {
   }
 
   const player = Spicetify.Player;
+
   const currentUri = player.data?.item?.uri ?? null;
 
   /*
    * Same track:
    *
-   * Do NOT seek again.
-   * The member should continue playing naturally.
+   * The track itself is already loaded.
+   * We still need to synchronize play/pause state.
    */
   if (currentUri === state.track_uri) {
+    const currentlyPlaying = player.isPlaying();
+
+    if (state.is_playing && !currentlyPlaying) {
+      console.log("[Party] Host resumed playback.");
+      await player.play();
+    } else if (!state.is_playing && currentlyPlaying) {
+      console.log("[Party] Host paused playback.");
+      player.pause();
+    }
+
     return;
   }
 
@@ -137,11 +148,6 @@ async function loadHostTrack(sync: MemberTrackSync, state: PartyPlaybackState) {
     /*
      * Match host play/pause state.
      */
-    // if (state.is_playing) {
-    //   player.play();
-    // } else {
-    //   player.pause();
-    // }
     if (!state.is_playing) {
       player.pause();
     }
