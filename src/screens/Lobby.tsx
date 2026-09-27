@@ -475,6 +475,22 @@ export default function Lobby({
     };
   }, [partyId, isHost]);
 
+  // useEffect(() => {
+  //   console.log("[Party TEST] MEMBER EFFECT:", {
+  //     partyId,
+  //     currentUserId,
+  //     isHost,
+  //   });
+
+  //   if (isHost) {
+  //     console.log("[Party TEST] HOST - skipping member sync");
+  //     return;
+  //   }
+
+  //   console.log("[Party TEST] STARTING MEMBER SYNC NOW");
+
+  //   startMemberPlayerSync(partyId);
+  // }, [partyId, currentUserId, isHost]);
   useEffect(() => {
     console.log("[Party TEST] MEMBER EFFECT:", {
       partyId,
@@ -482,14 +498,18 @@ export default function Lobby({
       isHost,
     });
 
-    if (isHost) {
-      console.log("[Party TEST] HOST - skipping member sync");
+    if (!currentUserId || isHost) {
+      console.log("[Party TEST] MEMBER SYNC SKIPPED");
       return;
     }
 
     console.log("[Party TEST] STARTING MEMBER SYNC NOW");
 
     startMemberPlayerSync(partyId);
+
+    return () => {
+      stopMemberPlayerSync();
+    };
   }, [partyId, currentUserId, isHost]);
 
   useEffect(() => {

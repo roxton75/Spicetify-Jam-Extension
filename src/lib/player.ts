@@ -17,59 +17,6 @@ let activeSync: MemberTrackSync | null = null;
  * Load the host's current Spotify track into the member's
  * own Spotify Desktop player.
  */
-// async function loadHostTrack(sync: MemberTrackSync, state: PartyPlaybackState) {
-//   if (sync.stopped || sync.applying) {
-//     return;
-//   }
-
-//   if (!state.track_uri) {
-//     return;
-//   }
-
-//   const player = Spicetify.Player;
-
-//   const currentUri = player.data?.item?.uri ?? null;
-
-//   /*
-//    * Already playing the host's track.
-//    */
-//   if (currentUri === state.track_uri) {
-//     return;
-//   }
-
-//   sync.applying = true;
-
-//   try {
-//     console.log("[Party] Loading host track:", {
-//       currentUri,
-//       hostUri: state.track_uri,
-//       track: state.track_name,
-//       artist: state.artist_name,
-//     });
-
-//     /*
-//      * This is the actual Spotify client handoff.
-//      *
-//      * Spotify Desktop resolves the Spotify URI locally.
-//      */
-//     await player.playUri(state.track_uri);
-
-//     if (sync.stopped) {
-//       return;
-//     }
-
-//     console.log("[Party] Host track loaded into member Spotify:", {
-//       hostUri: state.track_uri,
-//     });
-//   } catch (error) {
-//     console.error(
-//       "[Party] Failed to load host track into member Spotify:",
-//       error,
-//     );
-//   } finally {
-//     sync.applying = false;
-//   }
-// }
 
 async function loadHostTrack(sync: MemberTrackSync, state: PartyPlaybackState) {
   if (sync.stopped || sync.applying) {

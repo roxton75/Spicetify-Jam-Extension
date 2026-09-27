@@ -135,13 +135,71 @@ export async function updatePlaybackState(
 /**
  * Subscribe to playback changes for a party.
  */
+// export function subscribeToPlayback(
+//   partyId: string,
+//   onChange: (state: PartyPlaybackState) => void,
+// ) {
+//   const channel = supabase
+//     .channel(`party-playback-${partyId}`)
+//     .on(
+//       "postgres_changes",
+//       {
+//         event: "*",
+//         schema: "public",
+//         table: "party_playback_state",
+//         filter: `party_id=eq.${partyId}`,
+//       },
+//       (payload) => {
+//         console.log("[Party] Playback change:", payload);
+
+//         if (payload.new) {
+//           const playbackState = payload.new as PartyPlaybackState;
+
+//           console.log("[Party DEBUG] Sending playback state to member:", {
+//             partyId,
+//             track_uri: playbackState.track_uri,
+//             track_name: playbackState.track_name,
+//             is_playing: playbackState.is_playing,
+//           });
+
+//           onChange(playbackState);
+//         }
+//       },
+//     )
+//     .subscribe((status) => {
+//       console.log("[Party] Playback realtime status:", status);
+//     });
+
+//   return () => {
+//     supabase.removeChannel(channel);
+//   };
+// }
+type PlaybackSubscriber = {
+  id: number;
+  onChange: (state: PartyPlaybackState) => void;
+};
+
+type PlaybackChannelState = {
+  channel: ReturnType<typeof supabase.channel>;
+  subscribers: PlaybackSubscriber[];
+  nextSubscriberId: number;
+  subscribed: boolean;
+};
+
+const playbackChannels = new Map<string, PlaybackChannelState>();
+
 export function subscribeToPlayback(
   partyId: string,
   onChange: (state: PartyPlaybackState) => void,
 ) {
-  const channel = supabase
-    .channel(`party-playback-${partyId}`)
-    .on(
+  let state = playbackChannels.get(partyId);
+
+  /*
+   * Create exactly ONE Supabase Realtime channel
+   * for each party.
+   */
+  if (!state) {
+    const channel = supabase.channel(`party-playback-${partyId}`).on(
       "postgres_changes",
       {
         event: "*",
@@ -152,26 +210,107 @@ export function subscribeToPlayback(
       (payload) => {
         console.log("[Party] Playback change:", payload);
 
-        if (payload.new) {
-          const playbackState = payload.new as PartyPlaybackState;
+        if (!payload.new) {
+          return;
+        }
 
-          console.log("[Party DEBUG] Sending playback state to member:", {
-            partyId,
-            track_uri: playbackState.track_uri,
-            track_name: playbackState.track_name,
-            is_playing: playbackState.is_playing,
-          });
+        const playbackState = payload.new as PartyPlaybackState;
 
-          onChange(playbackState);
+        /*
+         * Send the same playback event to every
+         * local subscriber.
+         */
+        const currentState = playbackChannels.get(partyId);
+
+        if (!currentState) {
+          return;
+        }
+
+        for (const subscriber of currentState.subscribers) {
+          try {
+            subscriber.onChange(playbackState);
+          } catch (error) {
+            console.error("[Party] Playback subscriber error:", error);
+          }
         }
       },
-    )
-    .subscribe((status) => {
+    );
+
+    state = {
+      channel,
+      subscribers: [],
+      nextSubscriberId: 1,
+      subscribed: false,
+    };
+
+    playbackChannels.set(partyId, state);
+
+    channel.subscribe((status) => {
       console.log("[Party] Playback realtime status:", status);
+
+      const currentState = playbackChannels.get(partyId);
+
+      if (!currentState) {
+        return;
+      }
+
+      if (status === "SUBSCRIBED") {
+        currentState.subscribed = true;
+      }
+    });
+  }
+
+  /*
+   * Add this caller as a local subscriber.
+   */
+  const subscriberId = state.nextSubscriberId++;
+
+  state.subscribers.push({
+    id: subscriberId,
+    onChange,
+  });
+
+  console.log("[Party] Playback subscriber added:", {
+    partyId,
+    subscriberId,
+    subscribers: state.subscribers.length,
+  });
+
+  /*
+   * Remove only this subscriber.
+   *
+   * IMPORTANT:
+   * Do NOT remove the Supabase channel while another
+   * component is still using it.
+   */
+  return () => {
+    const currentState = playbackChannels.get(partyId);
+
+    if (!currentState) {
+      return;
+    }
+
+    currentState.subscribers = currentState.subscribers.filter(
+      (subscriber) => subscriber.id !== subscriberId,
+    );
+
+    console.log("[Party] Playback subscriber removed:", {
+      partyId,
+      subscriberId,
+      remaining: currentState.subscribers.length,
     });
 
-  return () => {
-    supabase.removeChannel(channel);
+    /*
+     * Nobody is using this party's playback channel anymore.
+     * Now it is safe to remove the Supabase channel.
+     */
+    if (currentState.subscribers.length === 0) {
+      playbackChannels.delete(partyId);
+
+      void supabase.removeChannel(currentState.channel);
+
+      console.log("[Party] Playback realtime channel removed:", partyId);
+    }
   };
 }
 

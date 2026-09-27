@@ -865,24 +865,69 @@ async function main() {
       return;
     }
 
-    if (currentScreen === "lobby") {
-      partyRoot.render(
-        <Lobby
-          partyId={partyId}
-          partyCode={partyCode}
-          onBack={closeParty}
-          onEndParty={() => {
-            activeParty = null;
-            partyId = "";
-            partyCode = "";
-            partyUserCount = 0;
+    // if (currentScreen === "lobby") {
+    //   partyRoot.render(
+    //     <Lobby
+    //       partyId={partyId}
+    //       partyCode={partyCode}
+    //       onBack={closeParty}
+    //       onEndParty={() => {
+    //         activeParty = null;
+    //         partyId = "";
+    //         partyCode = "";
+    //         partyUserCount = 0;
 
-            stopHostQueueSync();
-            updatePartyButton();
-            closeParty();
-          }}
-        />,
-      );
+    //         stopHostQueueSync();
+    //         updatePartyButton();
+    //         closeParty();
+    //       }}
+    //     />,
+    //   );
+    // }
+    if (currentScreen === "lobby") {
+      console.log("[Party DEBUG] Rendering Lobby:", {
+        partyId,
+        partyCode,
+        partyRootExists: !!partyRoot,
+        panelExists: !!panel,
+        panelHTMLBefore: panel.innerHTML.length,
+      });
+
+      try {
+        console.log("[Party DEBUG] ABOUT TO RENDER LOBBY COMPONENT");
+        partyRoot.render(
+          <Lobby
+            partyId={partyId}
+            partyCode={partyCode}
+            // onBack={closeParty}
+            onBack={() => {
+              console.log("[Party DEBUG] Lobby onBack INVOKED");
+              closeParty();
+            }}
+            onEndParty={() => {
+              console.log("[Party DEBUG] Lobby onEndParty INVOKED");
+
+              activeParty = null;
+              partyId = "";
+              partyCode = "";
+              partyUserCount = 0;
+
+              stopHostQueueSync();
+              updatePartyButton();
+              closeParty();
+            }}
+          />,
+        );
+        console.log("[Party DEBUG] FINISHED RENDER CALL");
+
+        console.log("[Party DEBUG] Lobby render() called:", {
+          panelHTMLAfter: panel.innerHTML.length,
+        });
+      } catch (error) {
+        console.error("[Party DEBUG] Lobby render THREW:", error);
+      }
+
+      return;
     }
   }
 
