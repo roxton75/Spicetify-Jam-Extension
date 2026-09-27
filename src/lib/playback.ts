@@ -325,6 +325,10 @@ export function startHostPlaybackSync(partyId: string) {
   let stopped = false;
   let updateInProgress = false;
 
+  let lastPositionMs = 0;
+  let lastTrackUri: string | null = null;
+  let lastPublishTime = 0;
+
   const publishPlayback = async () => {
     if (stopped || updateInProgress) {
       return;
@@ -425,6 +429,10 @@ export function startHostPlaybackSync(partyId: string) {
         duration_ms: Math.max(0, Math.round(durationMs)),
       });
 
+      lastPositionMs = positionMs;
+      lastTrackUri = trackUri;
+      lastPublishTime = Date.now();
+
       console.log("[Party] Playback synced:", {
         trackName,
         artistName,
@@ -454,6 +462,44 @@ export function startHostPlaybackSync(partyId: string) {
     void publishPlayback();
   };
 
+  const handleProgress = () => {
+    if (stopped || updateInProgress) {
+      return;
+    }
+
+    const player = Spicetify.Player;
+
+    const currentPosition = player.getProgress();
+    const currentUri = player.data?.item?.uri ?? null;
+
+    /*
+     * If the track changed, songchange handles it.
+     */
+    if (currentUri !== lastTrackUri) {
+      return;
+    }
+
+    /*
+     * Normal playback movement is expected.
+     *
+     * A large jump means the host probably
+     * manually seeked.
+     */
+    const positionDifference = Math.abs(currentPosition - lastPositionMs);
+
+    const SEEK_THRESHOLD_MS = 1500;
+
+    if (positionDifference >= SEEK_THRESHOLD_MS) {
+      console.log("[Party] Host seek detected:", {
+        previousPosition: Math.round(lastPositionMs),
+        currentPosition: Math.round(currentPosition),
+        difference: Math.round(positionDifference),
+      });
+
+      void publishPlayback();
+    }
+  };
+
   /*
    * Initial state.
    */
@@ -465,6 +511,10 @@ export function startHostPlaybackSync(partyId: string) {
   Spicetify.Player.addEventListener("songchange", handleSongChange);
 
   Spicetify.Player.addEventListener("onplaypause", handlePlayPause);
+
+  Spicetify.Player.addEventListener("onprogress", handleProgress);
+
+  // Spicetify.Player.removeEventListener("onprogress", handleProgress);
 
   /*
    * We intentionally do NOT write to Supabase
@@ -485,6 +535,8 @@ export function startHostPlaybackSync(partyId: string) {
     Spicetify.Player.removeEventListener("songchange", handleSongChange);
 
     Spicetify.Player.removeEventListener("onplaypause", handlePlayPause);
+
+    Spicetify.Player.removeEventListener("onprogress", handleProgress);
 
     window.clearInterval(heartbeat);
 
