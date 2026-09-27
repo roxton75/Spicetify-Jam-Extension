@@ -37,8 +37,25 @@ async function loadHostTrack(sync: MemberTrackSync, state: PartyPlaybackState) {
    * The track itself is already loaded.
    * We still need to synchronize play/pause state.
    */
+  // if (currentUri === state.track_uri) {
+  //   const currentlyPlaying = player.isPlaying();
+
+  //   if (state.is_playing && !currentlyPlaying) {
+  //     console.log("[Party] Host resumed playback.");
+  //     await player.play();
+  //   } else if (!state.is_playing && currentlyPlaying) {
+  //     console.log("[Party] Host paused playback.");
+  //     player.pause();
+  //   }
+
+  //   return;
+  // }
   if (currentUri === state.track_uri) {
     const currentlyPlaying = player.isPlaying();
+
+    // -----------------------------
+    // Play / Pause synchronization
+    // -----------------------------
 
     if (state.is_playing && !currentlyPlaying) {
       console.log("[Party] Host resumed playback.");
@@ -46,6 +63,51 @@ async function loadHostTrack(sync: MemberTrackSync, state: PartyPlaybackState) {
     } else if (!state.is_playing && currentlyPlaying) {
       console.log("[Party] Host paused playback.");
       player.pause();
+    }
+
+    // -----------------------------
+    // Position synchronization
+    // -----------------------------
+
+    if (state.is_playing) {
+      const updatedAt = new Date(state.updated_at).getTime();
+
+      if (Number.isFinite(updatedAt)) {
+        let expectedPosition = Math.max(0, state.position_ms);
+
+        // Estimate where the host should be NOW.
+        expectedPosition += Math.max(0, Date.now() - updatedAt);
+
+        const memberPosition = player.getProgress();
+
+        const difference = Math.abs(expectedPosition - memberPosition);
+
+        /*
+         * Only correct meaningful drift.
+         *
+         * Small differences are normal because of:
+         * - network latency
+         * - Spotify playback timing
+         * - realtime delivery
+         */
+        const POSITION_CORRECTION_THRESHOLD = 2000;
+
+        if (difference >= POSITION_CORRECTION_THRESHOLD) {
+          console.log("[Party] Correcting playback position:", {
+            hostPosition: Math.round(expectedPosition),
+            memberPosition: Math.round(memberPosition),
+            difference: Math.round(difference),
+          });
+
+          const duration = player.getDuration();
+
+          if (duration > 0) {
+            expectedPosition = Math.min(expectedPosition, duration);
+          }
+
+          player.seek(Math.round(expectedPosition));
+        }
+      }
     }
 
     return;
