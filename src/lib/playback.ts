@@ -321,6 +321,7 @@ export function subscribeToPlayback(
  * and stops the heartbeat.
  */
 export function startHostPlaybackSync(partyId: string) {
+  console.log("[SYNC TEST] HOST PUBLISH", Date.now());
   let stopped = false;
   let updateInProgress = false;
 

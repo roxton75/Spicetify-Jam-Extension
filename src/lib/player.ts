@@ -54,6 +54,8 @@ async function loadHostTrack(sync: MemberTrackSync, state: PartyPlaybackState) {
      */
     await player.playUri(state.track_uri);
 
+    console.log("[SYNC TEST] MEMBER TRACK LOADED", Date.now());
+
     if (sync.stopped) {
       return;
     }
@@ -208,6 +210,7 @@ export function startMemberPlayerSync(partyId: string) {
    * Listen for host track changes.
    */
   sync.unsubscribe = subscribeToPlayback(partyId, (state) => {
+    console.log("[SYNC TEST] MEMBER RECEIVED", Date.now());
     if (sync.stopped) {
       return;
     }
