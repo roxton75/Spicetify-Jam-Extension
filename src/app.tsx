@@ -38,6 +38,10 @@ async function main() {
   let partyCode = "";
   let partyUserCount = 0;
 
+  // Spotify display name of the current user, used as the "@hostname"
+  // suffix shown on the party button when an active party exists.
+  let hostName = "";
+
   let activeParty: {
     partyId: string;
     partyCode: string;
@@ -162,35 +166,60 @@ async function main() {
       ".party-button-left",
     ) as HTMLElement | null;
 
+    const center = partyButton.querySelector(
+      ".party-button-center",
+    ) as HTMLElement | null;
+
     const right = partyButton.querySelector(
       ".party-button-right",
     ) as HTMLElement | null;
 
-    if (left) {
-      left.textContent = activeParty ? `#${activeParty.partyCode}` : "—";
-    }
+    if (activeParty) {
+      // Active party: show "Listening to @hostname" on the left,
+      // empty center, and "#CODE | Users: N" on the right.
+      if (left) {
+        // Underline only the "@hostname" portion.
+        left.innerHTML = `Listening to <span class="party-button-host">@${hostName}</span>`;
+      }
 
-    if (right) {
-      right.innerHTML = "";
+      if (center) {
+        center.textContent = "";
+      }
 
-      if (activeParty) {
-        const icon = document.createElement("span");
+      if (right) {
+        right.innerHTML = "";
 
-        icon.className = "party-button-users-icon";
+        const codeSpan = document.createElement("span");
 
-        // Lucide SVG is rendered by React, so for this native button
-        // we'll use a simple text fallback for now.
-        icon.textContent = "◉";
+        codeSpan.textContent = `#${activeParty.partyCode}`;
 
-        right.appendChild(icon);
+        right.appendChild(codeSpan);
 
-        const text = document.createElement("span");
+        const sepSpan = document.createElement("span");
 
-        text.textContent = `Users: ${partyUserCount}`;
+        sepSpan.textContent = "|";
 
-        right.appendChild(text);
-      } else {
-        right.textContent = "Users: —";
+        right.appendChild(sepSpan);
+
+        const usersSpan = document.createElement("span");
+
+        usersSpan.textContent = `Users: ${partyUserCount}`;
+
+        right.appendChild(usersSpan);
+      }
+    } else {
+      // Inactive state: empty left, "Listen Together" center,
+      // "Users: —" right.
+      if (left) {
+        left.textContent = "";
+      }
+
+      if (center) {
+        center.textContent = "Listen Together";
+      }
+
+      if (right) {
+        right.innerHTML = "";
       }
     }
   }
@@ -544,47 +573,6 @@ async function main() {
     openParty();
   }
 
-  // function createPartyButton() {
-  //   // Prevent duplicates
-  //   if (document.getElementById("spotify-party-button")) {
-  //     return;
-  //   }
-
-  //   const nowPlayingBar = document.querySelector(
-  //     '[data-testid="now-playing-bar"]',
-  //   );
-
-  //   if (!nowPlayingBar) {
-  //     console.error("[Party] Now Playing bar not found");
-
-  //     return;
-  //   }
-
-  //   const button = document.createElement("button");
-
-  //   button.id = "spotify-party-button";
-  //   button.type = "button";
-
-  //   button.setAttribute("aria-label", "Spotify Party");
-
-  //   button.innerHTML = `
-  //     <span class="party-button-left">#NA</span>
-  //     <span class="party-button-center">Party Mode</span>
-  //     <span class="party-button-right">
-  //       Users: 0
-  //     </span>
-  //   `;
-
-  //   button.addEventListener("click", () => {
-  //     toggleParty();
-  //   });
-
-  //   nowPlayingBar.appendChild(button);
-
-  //   partyButton = button;
-
-  //   updatePartyButton();
-  // }
 
   function createPartyButton() {
     // Prevent duplicates
@@ -610,11 +598,9 @@ async function main() {
     button.setAttribute("aria-label", "Spotify Party");
 
     button.innerHTML = `
-    <span class="party-button-left">#NA</span>
-    <span class="party-button-center">Party Mode</span>
-    <span class="party-button-right">
-      Users: 0
-    </span>
+    <span class="party-button-left"></span>
+    <span class="party-button-center">Listen Together</span>
+    <span class="party-button-right"></span>
   `;
 
     button.addEventListener("click", () => {
@@ -634,6 +620,10 @@ async function main() {
 
   try {
     const profile = await syncProfile();
+
+    // Cache the Spotify display name so the party button can show
+    // "Listening to @hostname" when an active party exists.
+    hostName = profile.display_name ?? "";
 
     console.log("[Party] Spotify profile synced:", {
       accountId: profile.spotify_account_id,
