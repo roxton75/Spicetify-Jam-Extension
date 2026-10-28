@@ -135,45 +135,6 @@ export async function updatePlaybackState(
 /**
  * Subscribe to playback changes for a party.
  */
-// export function subscribeToPlayback(
-//   partyId: string,
-//   onChange: (state: PartyPlaybackState) => void,
-// ) {
-//   const channel = supabase
-//     .channel(`party-playback-${partyId}`)
-//     .on(
-//       "postgres_changes",
-//       {
-//         event: "*",
-//         schema: "public",
-//         table: "party_playback_state",
-//         filter: `party_id=eq.${partyId}`,
-//       },
-//       (payload) => {
-//         console.log("[Party] Playback change:", payload);
-
-//         if (payload.new) {
-//           const playbackState = payload.new as PartyPlaybackState;
-
-//           console.log("[Party DEBUG] Sending playback state to member:", {
-//             partyId,
-//             track_uri: playbackState.track_uri,
-//             track_name: playbackState.track_name,
-//             is_playing: playbackState.is_playing,
-//           });
-
-//           onChange(playbackState);
-//         }
-//       },
-//     )
-//     .subscribe((status) => {
-//       console.log("[Party] Playback realtime status:", status);
-//     });
-
-//   return () => {
-//     supabase.removeChannel(channel);
-//   };
-// }
 type PlaybackSubscriber = {
   id: number;
   onChange: (state: PartyPlaybackState) => void;

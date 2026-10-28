@@ -475,22 +475,6 @@ export default function Lobby({
     };
   }, [partyId, isHost]);
 
-  // useEffect(() => {
-  //   console.log("[Party TEST] MEMBER EFFECT:", {
-  //     partyId,
-  //     currentUserId,
-  //     isHost,
-  //   });
-
-  //   if (isHost) {
-  //     console.log("[Party TEST] HOST - skipping member sync");
-  //     return;
-  //   }
-
-  //   console.log("[Party TEST] STARTING MEMBER SYNC NOW");
-
-  //   startMemberPlayerSync(partyId);
-  // }, [partyId, currentUserId, isHost]);
   useEffect(() => {
     console.log("[Party TEST] MEMBER EFFECT:", {
       partyId,
